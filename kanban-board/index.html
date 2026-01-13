@@ -8,132 +8,13 @@
 </head>
 
 <body>
-    <div id="app">
-        <div class="h-screen bg-linear-to-r from-cyan-500 to-blue-500 flex flex-col gap-8">
-            <header class="bg-black/20 py-4 shadow-sm">
-                <h1 class="font-bold text-3xl text-center">My board</h1>
-            </header>
-
-            <main class="h-full">
-                <div class="h-full px-2 overflow-x-auto">
-                    <div id="board" class="grid auto-cols-[20em] grid-flow-col gap-2 items-start h-full">
-                        <div class="bg-neutral-300 rounded-md shadow-sm">
-                            <div class="px-4 py-2">
-                                <h2 class="font-bold capitalize">In Progress</h2>
-                            </div>
-
-                            <div class="px-2 pb-2 space-y-4">
-                                <button class="font-bold text-sm text-neutral-500 cursor-pointer hover:text-neutral-700">+ Add another card</button>
-                            </div>
-                        </div>
-
-                        <div class="bg-neutral-300 rounded-md shadow-sm">
-                            <div class="px-4 py-2">
-                                <h2 class="font-bold capitalize">In Progress</h2>
-                            </div>
-
-                            <div class="px-2 pb-2 space-y-4">
-                                <ul class="space-y-2">
-                                    <li>
-                                        <div class="bg-neutral-100 rounded-sm px-2 py-1 shadow-sm space-y-1">
-                                            <div class="space-x-1">
-                                                <div class="text-xs capitalize bg-green-500 text-white py-px px-2 rounded-sm inline-block">Frontend</div>
-                                            </div>
-                                            <p>Create Authentication Views</p>
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div class="bg-neutral-100 rounded-sm px-2 py-1 shadow-sm space-y-1">
-                                            <div class="space-x-1">
-                                                <div class="text-xs capitalize bg-purple-500 text-white py-px px-2 rounded-sm inline-block">Backend</div>
-                                            </div>
-                                            <p>Create Authentication logic</p>
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div class="bg-neutral-100 rounded-sm px-2 py-1 shadow-sm space-y-1">
-                                            <div class="space-x-1">
-                                                <div class="text-xs capitalize bg-purple-500 text-white py-px px-2 rounded-sm inline-block">Backend</div>
-                                                <div class="text-xs capitalize bg-red-500 text-white py-px px-2 rounded-sm inline-block">Urgent</div>
-                                            </div>
-                                            <p>Investigate forgot password emails not being sent</p>
-                                        </div>
-                                    </li>
-                                </ul>
-
-                                <button class="font-bold text-sm text-neutral-500 cursor-pointer hover:text-neutral-700">+ Add another card</button>
-                            </div>
-                        </div>
-
-                        <div class="bg-neutral-300 rounded-md shadow-sm">
-                            <div class="px-4 py-2">
-                                <h2 class="font-bold capitalize">Review</h2>
-                            </div>
-
-                            <div class="px-2 pb-2 space-y-4">
-                                <ul class="space-y-2">
-                                    <li>
-                                        <div class="bg-neutral-100 rounded-sm px-2 py-1 shadow-sm space-y-1">
-                                            <div class="space-x-1">
-                                                <div class="text-xs capitalize bg-green-500 text-white py-px px-2 rounded-sm inline-block">Frontend</div>
-                                            </div>
-                                            <p>Add Sentry to frontend</p>
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div class="bg-neutral-100 rounded-sm px-2 py-1 shadow-sm space-y-1">
-                                            <div class="space-x-1">
-                                                <div class="text-xs capitalize bg-purple-500 text-white py-px px-2 rounded-sm inline-block">Backend</div>
-                                            </div>
-                                            <p>Add Sentry to backend</p>
-                                        </div>
-                                    </li>
-                                </ul>
-
-                                <button class="font-bold text-sm text-neutral-500 cursor-pointer hover:text-neutral-700">+ Add another card</button>
-                            </div>
-                        </div>
-
-                        <div class="bg-neutral-300 rounded-md shadow-sm">
-                            <div class="px-4 py-2">
-                                <h2 class="font-bold capitalize">Done</h2>
-                            </div>
-
-                            <div class="px-2 pb-2 space-y-4">
-                                <ul class="space-y-2">
-                                    <li>
-                                        <div class="bg-neutral-100 rounded-sm px-2 py-1 shadow-sm space-y-1">
-                                            <div class="space-x-1">
-                                                <div class="text-xs capitalize bg-yellow-500 text-white py-px px-2 rounded-sm inline-block">CI/CD</div>
-                                            </div>
-                                            <p>Create CICD pipeline in AWS</p>
-                                        </div>
-                                    </li>
-                                </ul>
-
-                                <button class="font-bold text-sm text-neutral-500 cursor-pointer hover:text-neutral-700">+ Add another card</button>
-                            </div>
-                        </div>
-
-                        <button class="bg-black/20 py-4 rounded-md shadow-sm cursor-pointer hover:bg-black/10 font-bold text-sm text-black">
-                            + Add another list
-                        </button>
-                    </div>
-                </div>
-            </main>
-        </div>
-    </div>
+    <div id="app"></div>
 
     <script type="module">
         import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
+        import App from "./js/components/App.js";
 
-        createApp({
-            data() {
-                return {
-                    heading: "Hello World!"
-                }
-            }
-        }).mount('#app');
+        createApp(App).mount('#app');
     </script>
 </body>
 </html>
