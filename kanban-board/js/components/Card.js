@@ -1,16 +1,12 @@
+import Label from "./Label.js";
+
 const Card = {
+    components: { Label },
     template: `
         <div class="bg-neutral-100 rounded-sm px-2 py-1 shadow-sm space-y-1">
             <div class="space-x-1">
-                <div
-                 v-for="label in labels"
-                 class="text-xs capitalize text-white py-px px-2 rounded-sm inline-block"
-                 :class="parseLabelColor(label)"
-                 
-                >
-                     {{ label.name }}
-                </div>
-                </div>
+                <Label v-for="label in labels" :name="label.name" :color="label.color" />
+            </div>
             <p>{{ content }}</p>
         </div>
     `,
@@ -19,15 +15,6 @@ const Card = {
         content: String,
         labels: Array
     },
-
-
-    methods: {
-        parseLabelColor(label) {
-            return [
-                `bg-[${label.color}]`,
-            ];
-        }
-    }
 }
 
 export default Card;
