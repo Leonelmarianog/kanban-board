@@ -1,29 +1,27 @@
 import lists from '../../data/db.js';
 import List from "./List.js";
+import Layout from "./Layout.js";
+import Board from "./Board.js";
 
 const App = {
     components: {
-        List,
+        Layout, List, Board
     },
 
     template: `
-        <div class="h-screen bg-linear-to-r from-cyan-500 to-blue-500 flex flex-col gap-8">
-            <header class="bg-black/20 py-4 shadow-sm">
+        <Layout>
+            <template v-slot:heading>
                 <h1 class="font-bold text-3xl text-center">My board</h1>
-            </header>
-           
-            <main class="h-full">
-                <div class="h-full px-2 overflow-x-auto">
-                    <div id="board" class="grid auto-cols-[20em] grid-flow-col gap-2 items-start h-full">
+            </template>
+        
+            <template v-slot:default>
+                <Board>
+                    <template v-slot:default>
                         <List v-for="list in lists" :id="list.id" :title="list.title" :cards="list.cards" @create-card="handleCreateCard"/>
-                        
-                        <button class="bg-black/20 py-4 rounded-md shadow-sm cursor-pointer hover:bg-black/10 font-bold text-sm text-black">
-                            + Add another list
-                        </button>
-                    </div>
-                </div>
-            </main>
-        </div>
+                    </template>
+                </Board>
+            </template>
+        </Layout>
     `,
 
     data( ) {
