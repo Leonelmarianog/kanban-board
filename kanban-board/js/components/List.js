@@ -10,7 +10,12 @@ const List = {
 
              <ul class="space-y-2 mt-3 mb-2">
                  <li v-for="card in cards">
-                    <Card :content="card.content" :labels="card.labels" />
+                    <Card 
+                        :id="card.id" 
+                        :content="card.content" 
+                        :labels="card.labels" 
+                        @update-card="handleUpdateCard" 
+                    />
                  </li>
              </ul>
     
@@ -50,6 +55,10 @@ const List = {
         handleCreateCard(formData) {
             this.$emit('create-card', { ...formData, listId: this.id });
             this.handleCloseCardCreateForm();
+        }      ,
+
+        handleUpdateCard(formData) {
+            this.$emit('update-card', { ...formData, listId: this.id });
         }
     }
 }
