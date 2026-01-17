@@ -18,7 +18,7 @@ const CardCreateForm = {
                         Add
                     </button>
                     <button 
-                        type="reset"
+                        type="button"
                         class="bg-neutral-500 text-white text-sm hover:bg-neutral-400 cursor-pointer rounded-md py-1 px-4"
                         @click="handleCancel"
                     >
