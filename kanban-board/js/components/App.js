@@ -17,7 +17,14 @@ const App = {
             <template v-slot:default>
                 <Board>
                     <template v-slot:default>
-                        <List v-for="list in lists" :id="list.id" :title="list.title" :cards="list.cards" @create-card="handleCreateCard"/>
+                        <List 
+                            v-for="list in lists" 
+                            :id="list.id" 
+                            :title="list.title" 
+                            :cards="list.cards" 
+                            @create-card="handleCreateCard" 
+                            @update-card="handleUpdateCard"
+                        />
                     </template>
                 </Board>
             </template>
@@ -39,6 +46,14 @@ const App = {
                 content: formData.content,
                 labels: []
             });
+        },
+
+        handleUpdateCard(formData) {
+            const list = this.lists.find((list) => list.id === formData.listId);
+
+            const card = list.cards.find(card => card.id === formData.cardId);
+
+            Object.assign(card, { content: formData.content });
         }
     }
 }

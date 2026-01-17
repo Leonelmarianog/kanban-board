@@ -18,7 +18,7 @@ export default [
                 ]
             },
             {
-                id: 1,
+                id: 2,
                 content: 'Add Authentication',
                 labels: [
                     {
@@ -32,7 +32,7 @@ export default [
                 ]
             },
             {
-                id: 1,
+                id: 3,
                 content: 'Add Authentication',
                 labels: [
                     {
@@ -66,7 +66,7 @@ export default [
                 ]
             },
             {
-                id: 1,
+                id: 2,
                 content: 'Add Authentication',
                 labels: [
                     {
@@ -80,7 +80,7 @@ export default [
                 ]
             },
             {
-                id: 1,
+                id: 3,
                 content: 'Add Authentication',
                 labels: [
                     {
@@ -114,7 +114,7 @@ export default [
                 ]
             },
             {
-                id: 1,
+                id: 2,
                 content: 'Add Authentication',
                 labels: [
                     {
@@ -128,7 +128,7 @@ export default [
                 ]
             },
             {
-                id: 1,
+                id: 3,
                 content: 'Add Authentication',
                 labels: [
                     {
@@ -162,7 +162,7 @@ export default [
                 ]
             },
             {
-                id: 1,
+                id: 2,
                 content: 'Add Authentication',
                 labels: [
                     {
@@ -176,7 +176,7 @@ export default [
                 ]
             },
             {
-                id: 1,
+                id: 3,
                 content: 'Add Authentication',
                 labels: [
                     {
