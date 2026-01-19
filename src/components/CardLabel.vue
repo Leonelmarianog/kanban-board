@@ -1,10 +1,10 @@
-<script>
+<script lang="ts">
 export default {
   props: {
     name: String,
-    color: String
+    color: String,
   },
-}
+};
 </script>
 
 <template>

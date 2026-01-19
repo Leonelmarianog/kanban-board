@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 export default {
   mounted() {
     this.$refs.textArea.focus();
@@ -6,40 +6,40 @@ export default {
 
   data() {
     return {
-      content: this.initialContent
-    }
+      content: this.initialContent,
+    };
   },
 
   props: {
     initialContent: {
       type: String,
-      default: ''
-    }
+      default: '',
+    },
   },
 
   methods: {
     handleSubmit() {
-      const formData = { content: this.content }
+      const formData = { content: this.content };
       this.$emit('update-card', formData);
       this.content = '';
     },
 
     handleCancel() {
       this.$emit('close');
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template>
   <form @submit.prevent="handleSubmit()">
-                <textarea
-                  name="content"
-                  v-model="content"
-                  class="px-2 py-1 w-full"
-                  ref="textArea"
-                  placeholder="Enter a title for this card..."
-                />
+    <textarea
+      name="content"
+      v-model="content"
+      class="px-2 py-1 w-full"
+      ref="textArea"
+      placeholder="Enter a title for this card..."
+    />
 
     <div class="flex gap-2 text-sm">
       <button

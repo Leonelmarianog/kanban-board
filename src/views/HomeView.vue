@@ -1,19 +1,21 @@
-<script>
+<script lang="ts">
 import lists from '@/../data/db.js';
 
-import List from "@/components/List.vue";
-import Layout from "@/components/Layout.vue";
-import Board from "@/components/Board.vue";
+import BoardList from '@/components/BoardList.vue';
+import PageLayout from '@/components/PageLayout.vue';
+import BoardContainer from '@/components/BoardContainer.vue';
 
 export default {
   components: {
-    Layout, List, Board
+    PageLayout,
+    BoardList,
+    BoardContainer,
   },
 
-  data( ) {
+  data() {
     return {
-      lists
-    }
+      lists,
+    };
   },
 
   methods: {
@@ -23,32 +25,33 @@ export default {
       list.cards.push({
         id: new Date().getTime(),
         content: formData.content,
-        labels: []
+        labels: [],
       });
     },
 
     handleUpdateCard(formData) {
       const list = this.lists.find((list) => list.id === formData.listId);
 
-      const card = list.cards.find(card => card.id === formData.cardId);
+      const card = list.cards.find((card) => card.id === formData.cardId);
 
       Object.assign(card, { content: formData.content });
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template>
-  <Layout>
+  <PageLayout>
     <template v-slot:heading>
       <h1 class="font-bold text-3xl text-center">My board</h1>
     </template>
 
     <template v-slot:default>
-      <Board>
+      <BoardContainer>
         <template v-slot:default>
-          <List
+          <BoardList
             v-for="list in lists"
+            :key="list.id"
             :id="list.id"
             :title="list.title"
             :cards="list.cards"
@@ -56,7 +59,7 @@ export default {
             @update-card="handleUpdateCard"
           />
         </template>
-      </Board>
+      </BoardContainer>
     </template>
-  </Layout>
+  </PageLayout>
 </template>

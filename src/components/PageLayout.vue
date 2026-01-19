@@ -1,23 +1,23 @@
-<script>
+<script lang="ts">
 export default {
   data() {
     return {
-      isOverlayVisible: false
+      isOverlayVisible: false,
     };
   },
 
   methods: {
     toggleOverlay() {
       this.isOverlayVisible = !this.isOverlayVisible;
-    }
+    },
   },
 
   provide() {
     return {
-      toggleLayoutOverlay: this.toggleOverlay
+      toggleLayoutOverlay: this.toggleOverlay,
     };
   },
-}
+};
 </script>
 
 <template>

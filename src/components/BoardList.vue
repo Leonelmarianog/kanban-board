@@ -1,41 +1,41 @@
-<script>
-import Card from "./Card.vue";
-import CardCreateForm from "./CardCreateForm.vue";
+<script lang="ts">
+import BoardCard from './BoardCard.vue';
+import CardCreateForm from './CardCreateForm.vue';
 
 export default {
-  components: { Card, CardCreateForm },
+  components: { BoardCard, CardCreateForm },
 
   data() {
     return {
-      isCardCreateFormVisible: false
-    }
+      isCardCreateFormVisible: false,
+    };
   },
 
   props: {
     id: Number,
     title: String,
-    cards: Array
+    cards: Array,
   },
 
   methods: {
-    handleOpenCardCreateForm () {
+    handleOpenCardCreateForm() {
       this.isCardCreateFormVisible = true;
     },
 
-    handleCloseCardCreateForm () {
+    handleCloseCardCreateForm() {
       this.isCardCreateFormVisible = false;
     },
 
     handleCreateCard(formData) {
       this.$emit('create-card', { ...formData, listId: this.id });
       this.handleCloseCardCreateForm();
-    }      ,
+    },
 
     handleUpdateCard(formData) {
       this.$emit('update-card', { ...formData, listId: this.id });
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template>
@@ -43,8 +43,8 @@ export default {
     <h2 class="font-bold capitalize pl-2">{{ title }}</h2>
 
     <ul class="space-y-2 mt-3 mb-2">
-      <li v-for="card in cards">
-        <Card
+      <li v-for="card in cards" :key="card.id">
+        <BoardCard
           :id="card.id"
           :content="card.content"
           :labels="card.labels"
@@ -61,6 +61,10 @@ export default {
       + Add another card
     </button>
 
-    <CardCreateForm v-if="isCardCreateFormVisible" @close="handleCloseCardCreateForm" @create-card="handleCreateCard"/>
+    <CardCreateForm
+      v-if="isCardCreateFormVisible"
+      @close="handleCloseCardCreateForm"
+      @create-card="handleCreateCard"
+    />
   </div>
 </template>
