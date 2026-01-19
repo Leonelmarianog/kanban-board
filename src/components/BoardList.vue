@@ -16,7 +16,9 @@ export default defineComponent({
   props: {
     id: Number,
     title: String,
-    cards: Array as PropType<{ id: number; content: string; labels: [] }[]>,
+    cards: Array as PropType<
+      { id: number; content: string; labels: { name: string; color: string }[] }[]
+    >,
   },
 
   methods: {
