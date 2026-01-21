@@ -3,9 +3,10 @@ import { defineComponent } from 'vue';
 import { Field } from 'vee-validate';
 import * as Yup from 'yup';
 import DynamicForm from './DynamicForm.vue';
+import CustomButton from '@/components/CustomButton.vue';
 
 export default defineComponent({
-  components: { DynamicForm, Field },
+  components: { CustomButton, DynamicForm, Field },
 
   emits: ['save', 'cancel'],
 
@@ -56,20 +57,8 @@ export default defineComponent({
         </div>
 
         <div class="space-x-2">
-          <button
-            class="bg-purple-500 text-white text-sm cursor-pointer rounded-sm py-2 px-6 hover:bg-purple-400 disabled:bg-purple-400 disabled:cursor-not-allowed"
-            type="submit"
-            :disabled="!meta.valid"
-          >
-            Save
-          </button>
-          <button
-            class="bg-neutral-500 text-white text-sm hover:bg-neutral-400 cursor-pointer rounded-sm py-2 px-6"
-            type="button"
-            @click="onCancelClick"
-          >
-            Cancel
-          </button>
+          <CustomButton type="submit" variant="sky" :disabled="!meta.valid">Save</CustomButton>
+          <CustomButton type="button" @click="onCancelClick">Cancel</CustomButton>
         </div>
       </div>
     </template>
