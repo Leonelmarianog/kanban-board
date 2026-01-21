@@ -3,11 +3,10 @@ import { defineComponent } from 'vue';
 import type { PropType } from 'vue';
 import CardLabel from './CardLabel.vue';
 import CardForm from '@/components/CardForm.vue';
+import FocusOverlay from '@/components/FocusOverlay.vue';
 
 export default defineComponent({
-  components: { CardForm, CardLabel },
-
-  inject: ['toggleLayoutOverlay'],
+  components: { FocusOverlay, CardForm, CardLabel },
 
   data() {
     return {
@@ -33,12 +32,10 @@ export default defineComponent({
   methods: {
     handleOpenCardUpdateForm() {
       this.isCardUpdateFormVisible = true;
-      (this as { toggleLayoutOverlay: () => void }).toggleLayoutOverlay();
     },
 
     handleCloseCardUpdateForm() {
       this.isCardUpdateFormVisible = false;
-      (this as { toggleLayoutOverlay: () => void }).toggleLayoutOverlay();
     },
 
     handleUpdateCard(formData: { content: string }) {
@@ -50,12 +47,7 @@ export default defineComponent({
 </script>
 
 <template>
-  <div
-    :class="{
-      'bg-neutral-100 rounded-sm shadow-sm px-2 py-1 space-y-1 group relative': true,
-      'z-2': isCardUpdateFormVisible,
-    }"
-  >
+  <div class="bg-neutral-100 rounded-sm shadow-sm px-2 py-1 space-y-1 group relative">
     <ul class="flex flex-wrap gap-x-1">
       <li v-for="label in labels" :key="label.name + '_' + new Date().getTime()">
         <CardLabel :name="label.name" :color="label.color" />
@@ -64,31 +56,34 @@ export default defineComponent({
 
     <p v-show="!isCardUpdateFormVisible" class="truncate">{{ content }}</p>
 
-    <CardForm
-      v-if="isCardUpdateFormVisible"
-      @cancel="handleCloseCardUpdateForm"
-      @save="handleUpdateCard"
-      :initial-values="{ content }"
-    />
+    <FocusOverlay v-if="isCardUpdateFormVisible">
+      <div class="relative">
+        <CardForm
+          @cancel="handleCloseCardUpdateForm"
+          @save="handleUpdateCard"
+          :initial-values="{ content }"
+        />
 
-    <div v-show="isCardUpdateFormVisible" class="absolute top-0 left-[102.5%] z-2">
-      <ul class="space-y-1">
-        <li>
-          <button
-            class="bg-black/70 py-2 px-4 rounded-sm cursor-pointer hover:bg-black/90 font-bold text-sm text-white text-nowrap"
-          >
-            Open card
-          </button>
-        </li>
-        <li>
-          <button
-            class="bg-black/70 py-2 px-4 rounded-sm cursor-pointer hover:bg-black/90 font-bold text-sm text-white text-nowrap"
-          >
-            Edit labels
-          </button>
-        </li>
-      </ul>
-    </div>
+        <div class="absolute top-0 -right-27">
+          <ul class="space-y-1">
+            <li>
+              <button
+                class="bg-black/70 py-2 px-4 rounded-sm cursor-pointer hover:bg-black/90 font-bold text-sm text-white text-nowrap"
+              >
+                Open card
+              </button>
+            </li>
+            <li>
+              <button
+                class="bg-black/70 py-2 px-4 rounded-sm cursor-pointer hover:bg-black/90 font-bold text-sm text-white text-nowrap"
+              >
+                Edit labels
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </FocusOverlay>
 
     <button
       v-show="!isCardUpdateFormVisible"
