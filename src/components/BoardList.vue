@@ -5,9 +5,10 @@ import BoardCard from './BoardCard.vue';
 import CardForm from '@/components/CardForm.vue';
 import FocusOverlay from '@/components/FocusOverlay.vue';
 import CardMenu from '@/components/CardMenu.vue';
+import CustomButton from '@/components/CustomButton.vue';
 
 export default defineComponent({
-  components: { CardMenu, FocusOverlay, CardForm, BoardCard },
+  components: { CustomButton, CardMenu, FocusOverlay, CardForm, BoardCard },
 
   data() {
     return {
@@ -105,13 +106,11 @@ export default defineComponent({
       @cancel="handleCloseCardCreateForm"
     />
 
-    <button
-      v-else
-      class="w-full text-neutral-500 text-left text-sm font-bold cursor-pointer hover:text-neutral-700 hover:bg-black/10 py-2 pl-4 rounded-sm"
-      @click="handleOpenCardCreateForm"
-    >
-      + Add another card
-    </button>
+    <CustomButton v-else variant="clear" :fullWidth="true" @click="handleOpenCardCreateForm">
+      <span class="text-neutral-500 hover:text-neutral-700 text-sm font-bold text-left block">
+        + Add another card
+      </span>
+    </CustomButton>
 
     <FocusOverlay v-if="isCardUpdateFormVisible">
       <div class="flex gap-2 absolute" :style="activeCardPosition">
