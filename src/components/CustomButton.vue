@@ -1,7 +1,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 
-const BASE_STYLE = 'cursor-pointer disabled:cursor-not-allowed rounded-sm py-2 px-6';
+const BASE_STYLE = 'cursor-pointer disabled:cursor-not-allowed rounded-sm py-2 px-6 text-nowrap';
 
 const VARIANTS = {
   default: 'bg-neutral-500 hover:bg-neutral-400 disabled:bg-neutral-400 text-white',
