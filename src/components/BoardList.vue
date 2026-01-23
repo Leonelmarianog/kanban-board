@@ -1,15 +1,20 @@
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { type CSSProperties, defineComponent } from 'vue';
 import type { PropType } from 'vue';
 import BoardCard from './BoardCard.vue';
 import CardForm from '@/components/CardForm.vue';
+import FocusOverlay from '@/components/FocusOverlay.vue';
+import CardMenu from '@/components/CardMenu.vue';
 
 export default defineComponent({
-  components: { CardForm, BoardCard },
+  components: { CardMenu, FocusOverlay, CardForm, BoardCard },
 
   data() {
     return {
+      activeCard: null as Record<string, unknown> | null,
+      activeCardRect: null as DOMRect | null,
       isCardCreateFormVisible: false,
+      isCardUpdateFormVisible: false,
     };
   },
 
@@ -30,13 +35,50 @@ export default defineComponent({
       this.isCardCreateFormVisible = false;
     },
 
+    handleOpenCardUpdateForm(card: Record<string, unknown>, cardRect: DOMRect) {
+      this.activeCard = card;
+      this.activeCardRect = cardRect;
+      this.isCardUpdateFormVisible = true;
+    },
+
+    handleCloseCardUpdateForm() {
+      this.activeCard = null;
+      this.activeCardRect = null;
+      this.isCardUpdateFormVisible = false;
+    },
+
     handleCreateCard(formData: { listId: number }) {
       this.$emit('create-card', { ...formData, listId: this.id });
       this.handleCloseCardCreateForm();
     },
 
-    handleUpdateCard(formData: { listId: number }) {
+    handleUpdateCard(formData: { cardId: number; content: string }) {
       this.$emit('update-card', { ...formData, listId: this.id });
+      this.handleCloseCardUpdateForm();
+    },
+  },
+
+  computed: {
+    activeCardPosition(): CSSProperties | null {
+      if (!this.activeCardRect) {
+        return null;
+      }
+
+      return {
+        top: `${this.activeCardRect.top}px`,
+        left: `${this.activeCardRect.left}px`,
+      };
+    },
+
+    activeCardSize(): CSSProperties | null {
+      if (!this.activeCardRect) {
+        return null;
+      }
+
+      return {
+        height: `${this.activeCardRect.height}px`,
+        width: `${this.activeCardRect.width}px`,
+      };
     },
   },
 });
@@ -52,7 +94,7 @@ export default defineComponent({
           :id="card.id"
           :content="card.content"
           :labels="card.labels"
-          @update-card="handleUpdateCard"
+          @edit="handleOpenCardUpdateForm"
         />
       </li>
     </ul>
@@ -70,5 +112,17 @@ export default defineComponent({
       @save="handleCreateCard"
       @cancel="handleCloseCardCreateForm"
     />
+
+    <FocusOverlay v-if="isCardUpdateFormVisible">
+      <div class="flex gap-2 absolute" :style="activeCardPosition">
+        <CardForm
+          :style="activeCardSize"
+          :initial-values="activeCard"
+          @save="handleUpdateCard"
+          @cancel="handleCloseCardUpdateForm"
+        />
+        <CardMenu />
+      </div>
+    </FocusOverlay>
   </div>
 </template>
