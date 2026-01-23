@@ -99,19 +99,19 @@ export default defineComponent({
       </li>
     </ul>
 
-    <button
-      class="w-full text-neutral-500 text-left text-sm font-bold cursor-pointer hover:text-neutral-700 hover:bg-black/10 py-2 pl-4 rounded-sm"
-      @click="handleOpenCardCreateForm"
-      v-show="!isCardCreateFormVisible"
-    >
-      + Add another card
-    </button>
-
     <CardForm
       v-if="isCardCreateFormVisible"
       @save="handleCreateCard"
       @cancel="handleCloseCardCreateForm"
     />
+
+    <button
+      v-else
+      class="w-full text-neutral-500 text-left text-sm font-bold cursor-pointer hover:text-neutral-700 hover:bg-black/10 py-2 pl-4 rounded-sm"
+      @click="handleOpenCardCreateForm"
+    >
+      + Add another card
+    </button>
 
     <FocusOverlay v-if="isCardUpdateFormVisible">
       <div class="flex gap-2 absolute" :style="activeCardPosition">
