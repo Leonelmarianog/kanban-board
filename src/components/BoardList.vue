@@ -48,12 +48,12 @@ export default defineComponent({
       this.isCardUpdateFormVisible = false;
     },
 
-    handleCreateCard(formData: { listId: number }) {
+    handleCreateCard(formData: Record<string, unknown>) {
       this.$emit('create-card', { ...formData, listId: this.id });
       this.handleCloseCardCreateForm();
     },
 
-    handleUpdateCard(formData: { cardId: number; content: string }) {
+    handleUpdateCard(formData: Record<string, unknown>) {
       this.$emit('update-card', { ...formData, listId: this.id });
       this.handleCloseCardUpdateForm();
     },

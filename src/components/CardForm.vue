@@ -1,5 +1,5 @@
-<script lang="ts">
-import { defineComponent, type PropType } from 'vue';
+<script setup lang="ts">
+import { computed, onMounted, useTemplateRef } from 'vue';
 import { Field } from 'vee-validate';
 import { object, string } from 'yup';
 import DynamicForm from '@/components/DynamicForm.vue';
@@ -9,48 +9,34 @@ const schema = object({
   content: string().trim().required('This field is required.').default(''),
 });
 
-export default defineComponent({
-  components: { CustomButton, DynamicForm, Field },
+const props = defineProps<{
+  initialValues?: Record<string, unknown> | null;
+}>();
 
-  emits: ['save', 'cancel'],
+const emit = defineEmits<{
+  (e: 'save', values: Record<string, unknown>): void;
+  (e: 'cancel'): void;
+}>();
 
-  props: {
-    initialValues: {
-      type: Object as PropType<Record<string, unknown> | null>,
-      default: null,
-    },
-  },
+const contentFieldWrapper = useTemplateRef<HTMLElement>('contentFieldWrapper');
 
-  computed: {
-    schema() {
-      return schema;
-    },
+const isEdit = computed(() => !!props.initialValues);
 
-    isEdit() {
-      return !!this.initialValues;
-    },
+const formValues = computed(() => (isEdit.value ? props.initialValues : null));
 
-    formValues() {
-      return this.isEdit ? this.initialValues : null;
-    },
-  },
+const save = (values: Record<string, unknown>) => {
+  emit('save', values);
+};
 
-  methods: {
-    save(values: Record<string, unknown>) {
-      this.$emit('save', values);
-    },
+const cancel = () => {
+  emit('cancel');
+};
 
-    cancel() {
-      this.$emit('cancel');
-    },
-  },
-
-  mounted() {
-    const $contentField = (this.$refs.contentFieldWrapper as HTMLElement).querySelector(
-      'textarea[name="content"]',
-    )! as HTMLTextAreaElement;
-    $contentField.focus();
-  },
+onMounted(() => {
+  const $contentField = contentFieldWrapper.value?.querySelector(
+    'textarea[name="content"]',
+  ) as HTMLTextAreaElement | null;
+  $contentField?.focus();
 });
 </script>
 
@@ -66,7 +52,6 @@ export default defineComponent({
               name="content"
               placeholder="Enter a title for this card..."
               class="w-full block pl-1"
-              ref="contentInput"
             />
           </div>
         </div>
