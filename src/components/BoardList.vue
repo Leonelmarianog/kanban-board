@@ -5,19 +5,20 @@ import CardForm from '@/components/CardForm.vue';
 import FocusOverlay from '@/components/FocusOverlay.vue';
 import CardMenu from '@/components/CardMenu.vue';
 import CustomButton from '@/components/CustomButton.vue';
+import type { Card } from '@/types';
 
 const props = defineProps<{
   id?: number;
   title?: string;
-  cards?: { id: number; content: string; labels: { name: string; color: string }[] }[];
+  cards?: Card[];
 }>();
 
 const emit = defineEmits<{
-  (e: 'create-card', payload: Record<string, unknown>): void;
-  (e: 'update-card', payload: Record<string, unknown>): void;
+  (e: 'create-card', payload: Partial<Card>): void;
+  (e: 'update-card', payload: Partial<Card>): void;
 }>();
 
-const activeCard = ref<Record<string, unknown> | null>(null);
+const activeCard = ref<Partial<Card> | null>(null);
 const activeCardRect = ref<DOMRect | null>(null);
 const isCardCreateFormVisible = ref(false);
 const isCardUpdateFormVisible = ref(false);
@@ -30,7 +31,7 @@ const handleCloseCardCreateForm = () => {
   isCardCreateFormVisible.value = false;
 };
 
-const handleOpenCardUpdateForm = (card: Record<string, unknown>, cardRect: DOMRect) => {
+const handleOpenCardUpdateForm = (card: Partial<Card>, cardRect: DOMRect) => {
   activeCard.value = card;
   activeCardRect.value = cardRect;
   isCardUpdateFormVisible.value = true;
@@ -42,12 +43,12 @@ const handleCloseCardUpdateForm = () => {
   isCardUpdateFormVisible.value = false;
 };
 
-const handleCreateCard = (formData: Record<string, unknown>) => {
+const handleCreateCard = (formData: Partial<Card>) => {
   emit('create-card', { ...formData, listId: props.id });
   handleCloseCardCreateForm();
 };
 
-const handleUpdateCard = (formData: Record<string, unknown>) => {
+const handleUpdateCard = (formData: Partial<Card>) => {
   emit('update-card', { ...formData, listId: props.id });
   handleCloseCardUpdateForm();
 };

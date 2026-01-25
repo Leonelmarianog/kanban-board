@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { useTemplateRef } from 'vue';
 import CardLabel from './CardLabel.vue';
+import type { Card } from '@/types';
 
 const props = withDefaults(
   defineProps<{
     id: number;
     content?: string;
-    labels?: { name: string; color: string }[];
+    labels?: Card['labels'];
   }>(),
   {
     content: '',
@@ -15,14 +16,14 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{
-  (e: 'edit', payload: { cardId: number; content: string }, rect: DOMRect): void;
+  (e: 'edit', payload: Partial<Card>, rect: DOMRect): void;
 }>();
 
 const root = useTemplateRef<HTMLElement>('root');
 
 const edit = () => {
   if (root.value) {
-    emit('edit', { cardId: props.id, content: props.content }, root.value.getBoundingClientRect());
+    emit('edit', { id: props.id, content: props.content }, root.value.getBoundingClientRect());
   }
 };
 </script>

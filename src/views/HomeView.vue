@@ -4,11 +4,12 @@ import PageLayout from '@/components/PageLayout.vue';
 import BoardContainer from '@/components/BoardContainer.vue';
 import { useCardStore } from '@/stores/card';
 import { useListStore } from '@/stores/list';
+import type { Card } from '@/types';
 
 const cardStore = useCardStore();
 const listStore = useListStore();
 
-const handleCreateCard = (formData: Record<string, unknown>): void => {
+const handleCreateCard = (formData: Partial<Card>): void => {
   cardStore.storeCard({
     id: new Date().getTime(),
     listId: formData.listId as number,
@@ -17,9 +18,9 @@ const handleCreateCard = (formData: Record<string, unknown>): void => {
   });
 };
 
-const handleUpdateCard = (formData: Record<string, unknown>): void => {
+const handleUpdateCard = (formData: Partial<Card>): void => {
   cardStore.updateCard({
-    id: formData.cardId as number,
+    id: formData.id as number,
     listId: formData.listId as number,
     content: formData.content as string,
   });
