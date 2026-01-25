@@ -19,25 +19,25 @@ export default defineComponent({
   },
 
   methods: {
-    handleCreateCard(formData: { listId: number; content: string }): void {
+    handleCreateCard(formData: Record<string, unknown>): void {
       const list = this.lists.find((list) => list.id === formData.listId);
 
       if (list) {
         list.cards.push({
           id: new Date().getTime(),
-          content: formData.content,
+          content: formData.content as string,
           labels: [],
         });
       }
     },
 
-    handleUpdateCard(formData: { listId: number; cardId: number; content: string }): void {
+    handleUpdateCard(formData: Record<string, unknown>): void {
       const list = this.lists.find((list) => list.id === formData.listId);
 
       if (list) {
         const card = list.cards.find((card) => card.id === formData.cardId);
         if (card) {
-          Object.assign(card, { content: formData.content });
+          Object.assign(card, { content: formData.content as string });
         }
       }
     },

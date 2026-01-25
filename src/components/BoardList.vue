@@ -1,87 +1,77 @@
-<script lang="ts">
-import { type CSSProperties, defineComponent } from 'vue';
-import type { PropType } from 'vue';
+<script setup lang="ts">
+import { type CSSProperties, computed, ref } from 'vue';
 import BoardCard from './BoardCard.vue';
 import CardForm from '@/components/CardForm.vue';
 import FocusOverlay from '@/components/FocusOverlay.vue';
 import CardMenu from '@/components/CardMenu.vue';
 import CustomButton from '@/components/CustomButton.vue';
 
-export default defineComponent({
-  components: { CustomButton, CardMenu, FocusOverlay, CardForm, BoardCard },
+const props = defineProps<{
+  id?: number;
+  title?: string;
+  cards?: { id: number; content: string; labels: { name: string; color: string }[] }[];
+}>();
 
-  data() {
-    return {
-      activeCard: null as Record<string, unknown> | null,
-      activeCardRect: null as DOMRect | null,
-      isCardCreateFormVisible: false,
-      isCardUpdateFormVisible: false,
-    };
-  },
+const emit = defineEmits<{
+  (e: 'create-card', payload: Record<string, unknown>): void;
+  (e: 'update-card', payload: Record<string, unknown>): void;
+}>();
 
-  props: {
-    id: Number,
-    title: String,
-    cards: Array as PropType<
-      { id: number; content: string; labels: { name: string; color: string }[] }[]
-    >,
-  },
+const activeCard = ref<Record<string, unknown> | null>(null);
+const activeCardRect = ref<DOMRect | null>(null);
+const isCardCreateFormVisible = ref(false);
+const isCardUpdateFormVisible = ref(false);
 
-  methods: {
-    handleOpenCardCreateForm() {
-      this.isCardCreateFormVisible = true;
-    },
+const handleOpenCardCreateForm = () => {
+  isCardCreateFormVisible.value = true;
+};
 
-    handleCloseCardCreateForm() {
-      this.isCardCreateFormVisible = false;
-    },
+const handleCloseCardCreateForm = () => {
+  isCardCreateFormVisible.value = false;
+};
 
-    handleOpenCardUpdateForm(card: Record<string, unknown>, cardRect: DOMRect) {
-      this.activeCard = card;
-      this.activeCardRect = cardRect;
-      this.isCardUpdateFormVisible = true;
-    },
+const handleOpenCardUpdateForm = (card: Record<string, unknown>, cardRect: DOMRect) => {
+  activeCard.value = card;
+  activeCardRect.value = cardRect;
+  isCardUpdateFormVisible.value = true;
+};
 
-    handleCloseCardUpdateForm() {
-      this.activeCard = null;
-      this.activeCardRect = null;
-      this.isCardUpdateFormVisible = false;
-    },
+const handleCloseCardUpdateForm = () => {
+  activeCard.value = null;
+  activeCardRect.value = null;
+  isCardUpdateFormVisible.value = false;
+};
 
-    handleCreateCard(formData: Record<string, unknown>) {
-      this.$emit('create-card', { ...formData, listId: this.id });
-      this.handleCloseCardCreateForm();
-    },
+const handleCreateCard = (formData: Record<string, unknown>) => {
+  emit('create-card', { ...formData, listId: props.id });
+  handleCloseCardCreateForm();
+};
 
-    handleUpdateCard(formData: Record<string, unknown>) {
-      this.$emit('update-card', { ...formData, listId: this.id });
-      this.handleCloseCardUpdateForm();
-    },
-  },
+const handleUpdateCard = (formData: Record<string, unknown>) => {
+  emit('update-card', { ...formData, listId: props.id });
+  handleCloseCardUpdateForm();
+};
 
-  computed: {
-    activeCardPosition(): CSSProperties | null {
-      if (!this.activeCardRect) {
-        return null;
-      }
+const activeCardPosition = computed((): CSSProperties | null => {
+  if (!activeCardRect.value) {
+    return null;
+  }
 
-      return {
-        top: `${this.activeCardRect.top}px`,
-        left: `${this.activeCardRect.left}px`,
-      };
-    },
+  return {
+    top: `${activeCardRect.value.top}px`,
+    left: `${activeCardRect.value.left}px`,
+  };
+});
 
-    activeCardSize(): CSSProperties | null {
-      if (!this.activeCardRect) {
-        return null;
-      }
+const activeCardSize = computed((): CSSProperties | null => {
+  if (!activeCardRect.value) {
+    return null;
+  }
 
-      return {
-        height: `${this.activeCardRect.height}px`,
-        width: `${this.activeCardRect.width}px`,
-      };
-    },
-  },
+  return {
+    height: `${activeCardRect.value.height}px`,
+    width: `${activeCardRect.value.width}px`,
+  };
 });
 </script>
 
@@ -113,9 +103,9 @@ export default defineComponent({
     </CustomButton>
 
     <FocusOverlay v-if="isCardUpdateFormVisible">
-      <div class="flex gap-2 absolute" :style="activeCardPosition">
+      <div class="flex gap-2 absolute" :style="activeCardPosition || undefined">
         <CardForm
-          :style="activeCardSize"
+          :style="activeCardSize || undefined"
           :initial-values="activeCard"
           @save="handleUpdateCard"
           @cancel="handleCloseCardUpdateForm"
