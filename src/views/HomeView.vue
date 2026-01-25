@@ -1,48 +1,34 @@
-<script lang="ts">
-import { defineComponent } from 'vue';
+<script setup lang="ts">
+import { ref } from 'vue';
 import listsData from '@/../data/db.js';
 import BoardList from '@/components/BoardList.vue';
 import PageLayout from '@/components/PageLayout.vue';
 import BoardContainer from '@/components/BoardContainer.vue';
 
-export default defineComponent({
-  components: {
-    PageLayout,
-    BoardList,
-    BoardContainer,
-  },
+const lists = ref(listsData);
 
-  data() {
-    return {
-      lists: listsData,
-    };
-  },
+const handleCreateCard = (formData: Record<string, unknown>): void => {
+  const list = lists.value.find((list) => list.id === formData.listId);
 
-  methods: {
-    handleCreateCard(formData: Record<string, unknown>): void {
-      const list = this.lists.find((list) => list.id === formData.listId);
+  if (list) {
+    list.cards.push({
+      id: new Date().getTime(),
+      content: formData.content as string,
+      labels: [],
+    });
+  }
+};
 
-      if (list) {
-        list.cards.push({
-          id: new Date().getTime(),
-          content: formData.content as string,
-          labels: [],
-        });
-      }
-    },
+const handleUpdateCard = (formData: Record<string, unknown>): void => {
+  const list = lists.value.find((list) => list.id === formData.listId);
 
-    handleUpdateCard(formData: Record<string, unknown>): void {
-      const list = this.lists.find((list) => list.id === formData.listId);
-
-      if (list) {
-        const card = list.cards.find((card) => card.id === formData.cardId);
-        if (card) {
-          Object.assign(card, { content: formData.content as string });
-        }
-      }
-    },
-  },
-});
+  if (list) {
+    const card = list.cards.find((card) => card.id === formData.cardId);
+    if (card) {
+      Object.assign(card, { content: formData.content as string });
+    }
+  }
+};
 </script>
 
 <template>
