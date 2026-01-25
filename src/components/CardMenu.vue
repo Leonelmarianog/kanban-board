@@ -1,10 +1,5 @@
-<script lang="ts">
+<script setup lang="ts">
 import CustomButton from '@/components/CustomButton.vue';
-import { defineComponent } from 'vue';
-
-export default defineComponent({
-  components: { CustomButton },
-});
 </script>
 
 <template>
