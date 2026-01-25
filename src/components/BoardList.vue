@@ -82,12 +82,7 @@ const activeCardSize = computed((): CSSProperties | null => {
 
     <ul class="space-y-2 mt-3 mb-2">
       <li v-for="card in cards" :key="card.id">
-        <BoardCard
-          :id="card.id"
-          :content="card.content"
-          :labels="card.labels"
-          @edit="handleOpenCardUpdateForm"
-        />
+        <BoardCard :card="card" @edit="handleOpenCardUpdateForm" />
       </li>
     </ul>
 
