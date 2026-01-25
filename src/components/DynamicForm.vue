@@ -1,25 +1,17 @@
-<script lang="ts">
-import { defineComponent } from 'vue';
+<script setup lang="ts">
 import { Form as VeeForm } from 'vee-validate';
 
-export default defineComponent({
-  components: { VeeForm },
+defineProps<{
+  schema?: Record<string, unknown>;
+}>();
 
-  emits: ['submit'],
+const emit = defineEmits<{
+  (e: 'submit', values: Record<string, unknown>): void;
+}>();
 
-  props: {
-    schema: {
-      type: Object,
-      default: undefined,
-    },
-  },
-
-  methods: {
-    onSubmit(values: Record<string, unknown>) {
-      this.$emit('submit', values);
-    },
-  },
-});
+const onSubmit = (values: Record<string, unknown>) => {
+  emit('submit', values);
+};
 </script>
 
 <template>
