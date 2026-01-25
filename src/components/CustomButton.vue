@@ -16,8 +16,8 @@ const emit = defineEmits<{
 
 const props = withDefaults(
   defineProps<{
-    variant: string;
-    fullWidth: boolean;
+    variant?: string;
+    fullWidth?: boolean;
   }>(),
   {
     variant: 'default',
