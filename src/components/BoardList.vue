@@ -5,12 +5,10 @@ import CardForm from '@/components/CardForm.vue';
 import FocusOverlay from '@/components/FocusOverlay.vue';
 import CardMenu from '@/components/CardMenu.vue';
 import CustomButton from '@/components/CustomButton.vue';
-import type { Card } from '@/types';
+import type { Card, List } from '@/types';
 
 const props = defineProps<{
-  id?: number;
-  title?: string;
-  cards?: Card[];
+  list: List;
 }>();
 
 const emit = defineEmits<{
@@ -44,12 +42,12 @@ const handleCloseCardUpdateForm = () => {
 };
 
 const handleCreateCard = (formData: Partial<Card>) => {
-  emit('create-card', { ...formData, listId: props.id });
+  emit('create-card', { ...formData, listId: props.list.id });
   handleCloseCardCreateForm();
 };
 
 const handleUpdateCard = (formData: Partial<Card>) => {
-  emit('update-card', { ...formData, listId: props.id });
+  emit('update-card', { ...formData, listId: props.list.id });
   handleCloseCardUpdateForm();
 };
 
@@ -78,10 +76,10 @@ const activeCardSize = computed((): CSSProperties | null => {
 
 <template>
   <div class="bg-neutral-300 rounded-md shadow-md p-2">
-    <h2 class="font-bold capitalize pl-2">{{ title }}</h2>
+    <h2 class="font-bold capitalize pl-2">{{ list.title }}</h2>
 
     <ul class="space-y-2 mt-3 mb-2">
-      <li v-for="card in cards" :key="card.id">
+      <li v-for="card in list.cards" :key="card.id">
         <BoardCard :card="card" @edit="handleOpenCardUpdateForm" />
       </li>
     </ul>

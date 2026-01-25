@@ -39,9 +39,7 @@ const handleUpdateCard = (formData: Partial<Card>): void => {
           <BoardList
             v-for="list in listStore.lists"
             :key="list.id"
-            :id="list.id"
-            :title="list.title"
-            :cards="list.cards"
+            :list="list"
             @create-card="handleCreateCard"
             @update-card="handleUpdateCard"
           />
