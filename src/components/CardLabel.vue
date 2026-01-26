@@ -1,15 +1,16 @@
 <script setup lang="ts">
+import type { Label } from '@/types';
+
 defineProps<{
-  name?: string;
-  color?: string;
+  label: Label;
 }>();
 </script>
 
 <template>
   <div
     class="text-xs capitalize text-white py-px px-2 rounded-sm inline-block"
-    :style="{ backgroundColor: color }"
+    :style="{ backgroundColor: label.color }"
   >
-    {{ name }}
+    {{ label.name }}
   </div>
 </template>

@@ -2,6 +2,7 @@
 import { computed, onMounted, useTemplateRef } from 'vue';
 import { Field } from 'vee-validate';
 import { object, string } from 'yup';
+import type { Card } from '@/types';
 import DynamicForm from '@/components/DynamicForm.vue';
 import CustomButton from '@/components/CustomButton.vue';
 
@@ -10,11 +11,11 @@ const schema = object({
 });
 
 const props = defineProps<{
-  initialValues?: Record<string, unknown> | null;
+  initialValues?: Partial<Card> | null;
 }>();
 
 const emit = defineEmits<{
-  (e: 'save', values: Record<string, unknown>): void;
+  (e: 'save', values: Partial<Card>): void;
   (e: 'cancel'): void;
 }>();
 
@@ -25,7 +26,7 @@ const isEdit = computed(() => !!props.initialValues);
 const formValues = computed(() => (isEdit.value ? props.initialValues : null));
 
 const save = (values: Record<string, unknown>) => {
-  emit('save', values);
+  emit('save', values as Partial<Card>);
 };
 
 const cancel = () => {

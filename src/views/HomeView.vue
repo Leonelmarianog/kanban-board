@@ -1,48 +1,30 @@
-<script lang="ts">
-import { defineComponent } from 'vue';
-import listsData from '@/../data/db.js';
+<script setup lang="ts">
 import BoardList from '@/components/BoardList.vue';
 import PageLayout from '@/components/PageLayout.vue';
 import BoardContainer from '@/components/BoardContainer.vue';
+import { useCardStore } from '@/stores/card';
+import { useListStore } from '@/stores/list';
+import type { Card } from '@/types';
 
-export default defineComponent({
-  components: {
-    PageLayout,
-    BoardList,
-    BoardContainer,
-  },
+const cardStore = useCardStore();
+const listStore = useListStore();
 
-  data() {
-    return {
-      lists: listsData,
-    };
-  },
+const handleCreateCard = (formData: Partial<Card>): void => {
+  cardStore.storeCard({
+    id: new Date().getTime(),
+    listId: formData.listId as number,
+    content: formData.content as string,
+    labels: [],
+  });
+};
 
-  methods: {
-    handleCreateCard(formData: Record<string, unknown>): void {
-      const list = this.lists.find((list) => list.id === formData.listId);
-
-      if (list) {
-        list.cards.push({
-          id: new Date().getTime(),
-          content: formData.content as string,
-          labels: [],
-        });
-      }
-    },
-
-    handleUpdateCard(formData: Record<string, unknown>): void {
-      const list = this.lists.find((list) => list.id === formData.listId);
-
-      if (list) {
-        const card = list.cards.find((card) => card.id === formData.cardId);
-        if (card) {
-          Object.assign(card, { content: formData.content as string });
-        }
-      }
-    },
-  },
-});
+const handleUpdateCard = (formData: Partial<Card>): void => {
+  cardStore.updateCard({
+    id: formData.id as number,
+    listId: formData.listId as number,
+    content: formData.content as string,
+  });
+};
 </script>
 
 <template>
@@ -55,11 +37,9 @@ export default defineComponent({
       <BoardContainer>
         <template v-slot:default>
           <BoardList
-            v-for="list in lists"
+            v-for="list in listStore.lists"
             :key="list.id"
-            :id="list.id"
-            :title="list.title"
-            :cards="list.cards"
+            :list="list"
             @create-card="handleCreateCard"
             @update-card="handleUpdateCard"
           />

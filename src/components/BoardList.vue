@@ -5,19 +5,18 @@ import CardForm from '@/components/CardForm.vue';
 import FocusOverlay from '@/components/FocusOverlay.vue';
 import CardMenu from '@/components/CardMenu.vue';
 import CustomButton from '@/components/CustomButton.vue';
+import type { Card, List } from '@/types';
 
 const props = defineProps<{
-  id?: number;
-  title?: string;
-  cards?: { id: number; content: string; labels: { name: string; color: string }[] }[];
+  list: List;
 }>();
 
 const emit = defineEmits<{
-  (e: 'create-card', payload: Record<string, unknown>): void;
-  (e: 'update-card', payload: Record<string, unknown>): void;
+  (e: 'create-card', payload: Partial<Card>): void;
+  (e: 'update-card', payload: Partial<Card>): void;
 }>();
 
-const activeCard = ref<Record<string, unknown> | null>(null);
+const activeCard = ref<Partial<Card> | null>(null);
 const activeCardRect = ref<DOMRect | null>(null);
 const isCardCreateFormVisible = ref(false);
 const isCardUpdateFormVisible = ref(false);
@@ -30,7 +29,7 @@ const handleCloseCardCreateForm = () => {
   isCardCreateFormVisible.value = false;
 };
 
-const handleOpenCardUpdateForm = (card: Record<string, unknown>, cardRect: DOMRect) => {
+const handleOpenCardUpdateForm = (card: Partial<Card>, cardRect: DOMRect) => {
   activeCard.value = card;
   activeCardRect.value = cardRect;
   isCardUpdateFormVisible.value = true;
@@ -42,13 +41,13 @@ const handleCloseCardUpdateForm = () => {
   isCardUpdateFormVisible.value = false;
 };
 
-const handleCreateCard = (formData: Record<string, unknown>) => {
-  emit('create-card', { ...formData, listId: props.id });
+const handleCreateCard = (formData: Partial<Card>) => {
+  emit('create-card', { ...formData, listId: props.list.id });
   handleCloseCardCreateForm();
 };
 
-const handleUpdateCard = (formData: Record<string, unknown>) => {
-  emit('update-card', { ...formData, listId: props.id });
+const handleUpdateCard = (formData: Partial<Card>) => {
+  emit('update-card', { ...formData, listId: props.list.id });
   handleCloseCardUpdateForm();
 };
 
@@ -77,16 +76,11 @@ const activeCardSize = computed((): CSSProperties | null => {
 
 <template>
   <div class="bg-neutral-300 rounded-md shadow-md p-2">
-    <h2 class="font-bold capitalize pl-2">{{ title }}</h2>
+    <h2 class="font-bold capitalize pl-2">{{ list.title }}</h2>
 
     <ul class="space-y-2 mt-3 mb-2">
-      <li v-for="card in cards" :key="card.id">
-        <BoardCard
-          :id="card.id"
-          :content="card.content"
-          :labels="card.labels"
-          @edit="handleOpenCardUpdateForm"
-        />
+      <li v-for="card in list.cards" :key="card.id">
+        <BoardCard :card="card" @edit="handleOpenCardUpdateForm" />
       </li>
     </ul>
 

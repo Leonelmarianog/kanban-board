@@ -3,6 +3,7 @@ import { mount } from '@vue/test-utils';
 import App from '../App.vue';
 import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '../views/HomeView.vue';
+import { createPinia } from 'pinia';
 
 const routes = [
   {
@@ -21,10 +22,11 @@ describe('App', () => {
   it('Routes correctly', async () => {
     await router.push('/');
     await router.isReady();
+    const pinia = createPinia();
 
     const wrapper = mount(App, {
       global: {
-        plugins: [router],
+        plugins: [router, pinia],
       },
     });
 
