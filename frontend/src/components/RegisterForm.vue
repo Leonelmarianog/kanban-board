@@ -19,11 +19,21 @@ const schema = yup.object({
 });
 
 const emit = defineEmits<{
-  (e: 'save', values: unknown): void;
+  (e: 'save', values: FormData): void;
 }>();
 
-const save = (values: Record<string, unknown>) => {
-  emit('save', values as unknown);
+const save = (values: Record<string, string>) => {
+  const { firstName, lastName, email, password, passwordConfirmation } = values;
+
+  const formData = new FormData();
+
+  formData.append('first_name', firstName);
+  formData.append('last_name', lastName);
+  formData.append('email', email);
+  formData.append('password', password);
+  formData.append('password_confirmation', passwordConfirmation);
+
+  emit('save', formData);
 };
 </script>
 
@@ -102,9 +112,9 @@ const save = (values: Record<string, unknown>) => {
         </div>
 
         <div class="space-x-2">
-          <CustomButton type="submit" variant="green" width="full" :disabled="!meta.valid"
-            >Register</CustomButton
-          >
+          <CustomButton type="submit" variant="green" width="full" :disabled="!meta.valid">
+            Register
+          </CustomButton>
         </div>
       </div>
     </template>
