@@ -3,37 +3,38 @@ import { ErrorMessage, Field } from 'vee-validate';
 import * as yup from 'yup';
 import DynamicForm from '@/components/DynamicForm.vue';
 import CustomButton from '@/components/CustomButton.vue';
+import { RegisterFormData } from '@/forms/RegisterFormData.ts';
 
 const schema = yup.object({
-  firstName: yup.string().required('First name is required').min(2, 'Too short'),
-  lastName: yup.string().required('Last name is required').min(2, 'Too short'),
+  first_name: yup.string().required('First name is required').min(2, 'Too short'),
+  last_name: yup.string().required('Last name is required').min(2, 'Too short'),
   email: yup.string().required('Email is required').email('Must be a valid email'),
   password: yup
     .string()
     .required('Password is required')
     .min(8, 'Password must be at least 8 characters'),
-  passwordConfirmation: yup
+  password_confirmation: yup
     .string()
     .required('Password confirmation is required')
     .oneOf([yup.ref('password')], 'Passwords do not match'),
 });
 
 const emit = defineEmits<{
-  (e: 'save', values: FormData): void;
+  (e: 'save', values: RegisterFormData): void;
 }>();
 
 const save = (values: Record<string, string>) => {
-  const { firstName, lastName, email, password, passwordConfirmation } = values;
+  const { first_name, last_name, email, password, password_confirmation } = values;
 
-  const formData = new FormData();
+  const registerFormData = new RegisterFormData(
+    first_name,
+    last_name,
+    email,
+    password,
+    password_confirmation,
+  );
 
-  formData.append('first_name', firstName);
-  formData.append('last_name', lastName);
-  formData.append('email', email);
-  formData.append('password', password);
-  formData.append('password_confirmation', passwordConfirmation);
-
-  emit('save', formData);
+  emit('save', registerFormData);
 };
 </script>
 
@@ -50,11 +51,11 @@ const save = (values: Record<string, string>) => {
               id="firstName"
               as="input"
               type="text"
-              name="firstName"
+              name="first_name"
               placeholder="Enter your first name..."
               class="w-full block pl-1 py-1 border border-neutral-300 rounded-sm focus:border-neutral-400 focus:ring-neutral-400 focus:ring-1 focus:ring-opacity-50"
             />
-            <ErrorMessage name="firstName" class="text-red-500 text-xs italic" />
+            <ErrorMessage name="first_name" class="text-red-500 text-xs italic" />
           </div>
 
           <div class="space-y-2">
@@ -63,11 +64,11 @@ const save = (values: Record<string, string>) => {
               id="lastName"
               as="input"
               type="text"
-              name="lastName"
+              name="last_name"
               placeholder="Enter your last name..."
               class="w-full block pl-1 py-1 border border-neutral-300 rounded-sm focus:border-neutral-400 focus:ring-neutral-400 focus:ring-1 focus:ring-opacity-50"
             />
-            <ErrorMessage name="lastName" class="text-red-500 text-xs italic" />
+            <ErrorMessage name="last_name" class="text-red-500 text-xs italic" />
           </div>
 
           <div class="space-y-2">
@@ -103,11 +104,11 @@ const save = (values: Record<string, string>) => {
               id="passwordConfirmation"
               as="input"
               type="password"
-              name="passwordConfirmation"
+              name="password_confirmation"
               placeholder="Confirm your password..."
               class="w-full block pl-1 py-1 border border-neutral-300 rounded-sm focus:border-neutral-400 focus:ring-neutral-400 focus:ring-1 focus:ring-opacity-50"
             />
-            <ErrorMessage name="passwordConfirmation" class="text-red-500 text-xs italic" />
+            <ErrorMessage name="password_confirmation" class="text-red-500 text-xs italic" />
           </div>
         </div>
 

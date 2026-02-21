@@ -1,27 +1,32 @@
 <script setup lang="ts">
-import RegisterForm from '@/components/RegisterForm.vue';
 import { useAuthStore } from '@/stores/auth.ts';
 import { useMutation } from '@tanstack/vue-query';
 import { authService } from '@/services/api.ts';
 import { useRouter } from 'vue-router';
+import RegisterForm from '@/components/RegisterForm.vue';
+import type { RegisterFormData } from '@/forms/RegisterFormData.ts';
 
 const authStore = useAuthStore();
 const router = useRouter();
 
-const { mutate: registerUser, isPending } = useMutation({
-  mutationFn: (userData: FormData) => authService.register(userData),
+const { mutate: register, isPending } = useMutation({
+  mutationFn: (data: RegisterFormData) => {
+    return authService.register(data);
+  },
+
   onSuccess: (data) => {
     const { token } = data.data;
     authStore.setAuth(token);
     router.push('/');
   },
+
   onError: (error: unknown) => {
     console.error('Registration error:', error);
   },
 });
 
-const handleRegister = (values: FormData) => {
-  registerUser(values);
+const handleRegister = (values: RegisterFormData) => {
+  register(values);
 };
 </script>
 
