@@ -41,3 +41,6 @@ playwright-report/
 # AI
 .junie/
 .ai/
+
+# Environment Variables
+.env
