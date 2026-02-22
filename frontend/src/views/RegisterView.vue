@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/stores/auth.ts';
 import { useMutation } from '@tanstack/vue-query';
-import { authService } from '@/services/api.ts';
 import { useRouter } from 'vue-router';
 import RegisterForm from '@/components/RegisterForm.vue';
 import type { RegisterFormData } from '@/forms/RegisterFormData.ts';
+import { authService } from '@/services/backend/auth';
+import { AuthToken } from '@/entities/AuthToken.ts';
 
 const authStore = useAuthStore();
 const router = useRouter();
@@ -14,9 +15,8 @@ const { mutate: register, isPending } = useMutation({
     return authService.register(data);
   },
 
-  onSuccess: (data) => {
-    const { token } = data.data;
-    authStore.setAuth(token);
+  onSuccess: (data: AuthToken) => {
+    authStore.setAuth(data.getToken());
     router.push('/');
   },
 

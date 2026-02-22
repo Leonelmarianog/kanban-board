@@ -1,14 +1,7 @@
 import { BaseFormData } from '@/forms/BaseFormData.ts';
+import type { RegisterRequestInterface } from '@/services/backend/auth/types.ts';
 
-interface RegisterFormDataInterface {
-  first_name: string;
-  last_name: string;
-  email: string;
-  password: string;
-  password_confirmation: string;
-}
-
-export class RegisterFormData extends BaseFormData<RegisterFormDataInterface> {
+export class RegisterFormData extends BaseFormData<RegisterRequestInterface> {
   public constructor(
     private readonly first_name: string,
     private readonly last_name: string,
