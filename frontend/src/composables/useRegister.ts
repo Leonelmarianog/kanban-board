@@ -24,6 +24,6 @@ export function useRegister() {
 
   return {
     register: mutate,
-    isLoading: isPending,
+    isLoading: isPending as boolean,
   };
 }

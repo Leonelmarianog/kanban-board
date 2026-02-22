@@ -4,6 +4,15 @@ import * as yup from 'yup';
 import DynamicForm from '@/components/DynamicForm.vue';
 import CustomButton from '@/components/CustomButton.vue';
 import { RegisterFormData } from '@/forms/RegisterFormData.ts';
+import { LoaderCircle } from 'lucide-vue-next';
+
+defineProps<{
+  isLoading: boolean;
+}>();
+
+const emit = defineEmits<{
+  (e: 'save', values: RegisterFormData): void;
+}>();
 
 const schema = yup.object({
   first_name: yup.string().required('First name is required').min(2, 'Too short'),
@@ -18,10 +27,6 @@ const schema = yup.object({
     .required('Password confirmation is required')
     .oneOf([yup.ref('password')], 'Passwords do not match'),
 });
-
-const emit = defineEmits<{
-  (e: 'save', values: RegisterFormData): void;
-}>();
 
 const save = (values: Record<string, string>) => {
   const { first_name, last_name, email, password, password_confirmation } = values;
@@ -113,8 +118,16 @@ const save = (values: Record<string, string>) => {
         </div>
 
         <div class="space-x-2">
-          <CustomButton type="submit" variant="green" width="full" :disabled="!meta.valid">
-            Register
+          <CustomButton
+            type="submit"
+            variant="green"
+            width="full"
+            :disabled="!meta.valid || isLoading"
+          >
+            <span class="flex justify-center items-center">
+              <LoaderCircle v-if="isLoading" class="animate-spin" />
+              <span v-else>Register</span>
+            </span>
           </CustomButton>
         </div>
       </div>
