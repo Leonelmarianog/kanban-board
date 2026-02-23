@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ErrorMessage, Field } from 'vee-validate';
 import * as yup from 'yup';
 import DynamicForm from '@/components/DynamicForm.vue';
 import CustomButton from '@/components/CustomButton.vue';
 import { RegisterFormData } from '@/forms/RegisterFormData.ts';
 import { LoaderCircle } from 'lucide-vue-next';
+import CustomField from '@/components/CustomField.vue';
 
 defineProps<{
   isLoading: boolean;
@@ -50,71 +50,50 @@ const save = (values: Record<string, string>) => {
         <h2 class="font-bold text-lg text-center">Sign up to continue</h2>
 
         <div class="space-y-2">
-          <div class="space-y-2">
-            <label for="firstName" class="block text-sm font-bold">First Name</label>
-            <Field
-              id="firstName"
-              as="input"
-              type="text"
-              name="first_name"
-              placeholder="Enter your first name..."
-              class="w-full block pl-1 py-1 border border-neutral-300 rounded-sm focus:border-neutral-400 focus:ring-neutral-400 focus:ring-1 focus:ring-opacity-50"
-            />
-            <ErrorMessage name="first_name" class="text-red-500 text-xs italic" />
-          </div>
+          <CustomField
+            as="input"
+            type="text"
+            name="first_name"
+            placeholder="Enter your first name..."
+            label="First Name"
+            direction="vertical"
+          />
 
-          <div class="space-y-2">
-            <label for="lastName" class="block text-sm font-bold">Last Name</label>
-            <Field
-              id="lastName"
-              as="input"
-              type="text"
-              name="last_name"
-              placeholder="Enter your last name..."
-              class="w-full block pl-1 py-1 border border-neutral-300 rounded-sm focus:border-neutral-400 focus:ring-neutral-400 focus:ring-1 focus:ring-opacity-50"
-            />
-            <ErrorMessage name="last_name" class="text-red-500 text-xs italic" />
-          </div>
+          <CustomField
+            as="input"
+            type="text"
+            name="last_name"
+            placeholder="Enter your last name..."
+            label="Last Name"
+            direction="vertical"
+          />
 
-          <div class="space-y-2">
-            <label for="email" class="block text-sm font-bold">Email</label>
-            <Field
-              id="email"
-              as="input"
-              type="email"
-              name="email"
-              placeholder="Enter your email address..."
-              class="w-full block pl-1 py-1 border border-neutral-300 rounded-sm focus:border-neutral-400 focus:ring-neutral-400 focus:ring-1 focus:ring-opacity-50"
-            />
-            <ErrorMessage name="email" class="text-red-500 text-xs italic" />
-          </div>
+          <CustomField
+            as="input"
+            type="email"
+            name="email"
+            placeholder="Enter your email address..."
+            label="Email"
+            direction="vertical"
+          />
 
-          <div class="space-y-2">
-            <label for="password" class="block text-sm font-bold">Password</label>
-            <Field
-              as="input"
-              type="password"
-              name="password"
-              placeholder="Enter a password for your account..."
-              class="w-full block pl-1 py-1 border border-neutral-300 rounded-sm focus:border-neutral-400 focus:ring-neutral-400 focus:ring-1 focus:ring-opacity-50"
-            />
-            <ErrorMessage name="password" class="text-red-500 text-xs italic" />
-          </div>
+          <CustomField
+            as="input"
+            type="password"
+            name="password"
+            placeholder="Enter a password for your account..."
+            label="Password"
+            direction="vertical"
+          />
 
-          <div class="space-y-2">
-            <label for="passwordConfirmation" class="block text-sm font-bold"
-              >Confirm Password</label
-            >
-            <Field
-              id="passwordConfirmation"
-              as="input"
-              type="password"
-              name="password_confirmation"
-              placeholder="Confirm your password..."
-              class="w-full block pl-1 py-1 border border-neutral-300 rounded-sm focus:border-neutral-400 focus:ring-neutral-400 focus:ring-1 focus:ring-opacity-50"
-            />
-            <ErrorMessage name="password_confirmation" class="text-red-500 text-xs italic" />
-          </div>
+          <CustomField
+            as="input"
+            type="password"
+            name="password_confirmation"
+            placeholder="Confirm your password..."
+            label="Confirm Password"
+            direction="vertical"
+          />
         </div>
 
         <div class="space-x-2">
