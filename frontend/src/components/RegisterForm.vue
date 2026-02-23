@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import * as yup from 'yup';
 import DynamicForm from '@/components/DynamicForm.vue';
-import CustomButton from '@/components/CustomButton.vue';
 import { RegisterFormData } from '@/forms/RegisterFormData.ts';
-import { LoaderCircle } from 'lucide-vue-next';
 import CustomField from '@/components/CustomField.vue';
+import LoadingButton from '@/components/LoadingButton.vue';
 
 defineProps<{
   isLoading: boolean;
@@ -96,19 +95,15 @@ const save = (values: Record<string, string>) => {
           />
         </div>
 
-        <div class="space-x-2">
-          <CustomButton
-            type="submit"
-            variant="green"
-            width="full"
-            :disabled="!meta.valid || isLoading"
-          >
-            <span class="flex justify-center items-center">
-              <LoaderCircle v-if="isLoading" class="animate-spin" />
-              <span v-else>Register</span>
-            </span>
-          </CustomButton>
-        </div>
+        <LoadingButton
+          type="submit"
+          variant="green"
+          width="full"
+          :disabled="!meta.valid || isLoading"
+          :isLoading="isLoading"
+        >
+          Register
+        </LoadingButton>
       </div>
     </template>
   </DynamicForm>

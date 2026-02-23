@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 
-type VariantOption = 'default' | 'green' | 'transparent' | 'clear';
-type PaddingOption = 'xs' | 'sm' | 'md' | 'lg';
-type WidthOption = 'auto' | 'full';
+export type VariantOption = 'default' | 'green' | 'transparent' | 'clear';
+export type PaddingOption = 'xs' | 'sm' | 'md' | 'lg';
+export type WidthOption = 'auto' | 'full';
 
 const emit = defineEmits<{
   (e: 'click'): void;
