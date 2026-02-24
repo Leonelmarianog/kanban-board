@@ -9,21 +9,18 @@ export function useRegister() {
   const authStore = useAuthStore();
   const router = useRouter();
 
-  const { mutate, isPending } = useMutation({
+  const { mutate, isPending, error } = useMutation({
     mutationFn: (data: RegisterFormData) => authService.register(data),
 
     onSuccess: (data: AuthToken) => {
       authStore.setAuth(data.getToken());
       router.push('/');
     },
-
-    onError: (err: unknown) => {
-      console.error('Registration error:', err);
-    },
   });
 
   return {
     register: mutate,
     isLoading: isPending as boolean,
+    error,
   };
 }

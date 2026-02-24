@@ -14,5 +14,6 @@ export interface ErrorApiResponseInterface extends BaseApiResponseInterface {
     message: string;
     code: number;
     timestamp: string;
+    validation_errors: Record<string, string[]>;
   };
 }

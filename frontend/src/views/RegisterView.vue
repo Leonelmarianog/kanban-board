@@ -3,7 +3,7 @@ import RegisterForm from '@/components/RegisterForm.vue';
 import type { RegisterFormData } from '@/forms/RegisterFormData.ts';
 import { useRegister } from '@/composables/useRegister.ts';
 
-const { register, isLoading } = useRegister();
+const { register, isLoading, error } = useRegister();
 
 const handleRegister = (values: RegisterFormData) => {
   register(values);
@@ -15,7 +15,11 @@ const handleRegister = (values: RegisterFormData) => {
     <main class="h-full">
       <div class="h-full flex justify-center items-center">
         <div class="w-[25em]">
-          <RegisterForm @save="handleRegister" :isLoading="isLoading" />
+          <RegisterForm
+            @save="handleRegister"
+            :isLoading="isLoading"
+            :errors="error?.response?.data?.error?.validation_errors"
+          />
         </div>
       </div>
     </main>

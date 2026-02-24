@@ -6,7 +6,7 @@ import type { AnyObjectSchema } from 'yup';
 const props = defineProps<{
   schema?: AnyObjectSchema;
   initialValues?: Record<string, unknown> | null;
-  errors?: Record<string, string> | null;
+  errors?: Record<string, string[]> | null;
 }>();
 
 const emit = defineEmits<{

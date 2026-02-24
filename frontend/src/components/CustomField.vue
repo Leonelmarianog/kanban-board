@@ -20,7 +20,7 @@ const props = withDefaults(
   },
 );
 
-const { value, errorMessage, handleChange, handleBlur } = useField(() => props.name);
+const { value, handleChange, handleBlur, errors } = useField(() => props.name);
 
 const DIRECTION_OPTIONS = {
   horizontal: 'flex items-center gap-2',
@@ -36,6 +36,7 @@ const containerClasses = computed(() => {
 const inputClasses = computed(() => [
   'block pl-1 py-1 border border-neutral-300 rounded-sm focus:border-neutral-400 focus:ring-neutral-400 focus:ring-1 focus:ring-opacity-50',
   props.direction === 'vertical' ? 'w-full' : 'flex-grow',
+  errors.value.length > 0 ? 'border-red-500' : '',
 ]);
 
 const inputType = computed(() => props.type);
@@ -61,6 +62,10 @@ const tagName = computed(() => props.as);
       @blur="handleBlur"
     />
 
-    <span v-if="errorMessage" class="text-red-500 text-xs italic">{{ errorMessage }}</span>
+    <ul v-if="errors.length" class="list-disc list-inside">
+      <li v-for="error in errors" :key="error" class="text-red-500 text-xs italic m-0 p-0">
+        {{ error }}
+      </li>
+    </ul>
   </div>
 </template>
