@@ -1,46 +1,31 @@
 <script setup lang="ts">
-import { ErrorMessage, Field } from 'vee-validate';
+import { useField } from 'vee-validate';
 import { computed } from 'vue';
-
-enum InputAs {
-  Input = 'input',
-  Textarea = 'textarea',
-}
-
-enum InputType {
-  Text = 'text',
-  Password = 'password',
-  Email = 'email',
-}
-
-enum DirectionOption {
-  Horizontal = 'horizontal',
-  Vertical = 'vertical',
-  Auto = 'auto',
-}
 
 const props = withDefaults(
   defineProps<{
-    as?: InputAs;
-    type?: InputType;
+    as?: 'input' | 'textarea';
+    type?: 'text' | 'password' | 'email';
     name: string;
     placeholder?: string;
     label?: string;
-    direction?: DirectionOption;
+    direction?: 'horizontal' | 'vertical' | 'auto';
   }>(),
   {
-    as: InputAs.Input,
-    type: InputType.Text,
+    as: 'input',
+    type: 'text',
     placeholder: undefined,
     label: undefined,
-    direction: DirectionOption.Auto,
+    direction: 'auto',
   },
 );
 
-const DIRECTION_OPTIONS: Record<DirectionOption, string> = {
-  [DirectionOption.Horizontal]: 'flex items-center gap-2',
-  [DirectionOption.Vertical]: 'flex flex-col gap-2',
-  [DirectionOption.Auto]: 'flex flex-wrap items-center gap-2',
+const { value, errorMessage, handleChange, handleBlur } = useField(() => props.name);
+
+const DIRECTION_OPTIONS = {
+  horizontal: 'flex items-center gap-2',
+  vertical: 'flex flex-col gap-2',
+  auto: 'flex flex-wrap items-center gap-2',
 };
 
 const containerClasses = computed(() => {
@@ -50,8 +35,12 @@ const containerClasses = computed(() => {
 
 const inputClasses = computed(() => [
   'block pl-1 py-1 border border-neutral-300 rounded-sm focus:border-neutral-400 focus:ring-neutral-400 focus:ring-1 focus:ring-opacity-50',
-  props.direction === DirectionOption.Vertical ? 'w-full' : 'flex-grow',
+  props.direction === 'vertical' ? 'w-full' : 'flex-grow',
 ]);
+
+const inputType = computed(() => props.type);
+
+const tagName = computed(() => props.as);
 </script>
 
 <template>
@@ -60,15 +49,18 @@ const inputClasses = computed(() => [
       label
     }}</label>
 
-    <Field
+    <component
+      :is="tagName"
       :id="name"
-      :as="as"
-      :type="type"
+      :type="inputType"
       :name="name"
       :placeholder="placeholder"
       :class="inputClasses"
+      :value="value"
+      @input="handleChange"
+      @blur="handleBlur"
     />
 
-    <ErrorMessage :name="name" class="text-red-500 text-xs italic" />
+    <span v-if="errorMessage" class="text-red-500 text-xs italic">{{ errorMessage }}</span>
   </div>
 </template>
