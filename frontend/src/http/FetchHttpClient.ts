@@ -1,4 +1,5 @@
 import type { HttpClientInterface, HttpMethod, HttpRequestOptions } from './types';
+import { HttpError } from './types';
 
 export class FetchHttpClient implements HttpClientInterface {
   constructor(private readonly baseUrl: string) {}
@@ -24,10 +25,7 @@ export class FetchHttpClient implements HttpClientInterface {
 
     if (!response.ok) {
       const errorBody = await response.json().catch(() => ({}));
-      throw {
-        status: response.status,
-        data: errorBody,
-      };
+      throw new HttpError(response.status, errorBody);
     }
 
     return response.json();
