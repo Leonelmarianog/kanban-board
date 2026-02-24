@@ -1,27 +1,14 @@
-import axios from 'axios';
-import type { AxiosResponse } from 'axios';
+import { FetchHttpClient, type HttpClientInterface } from '@/http';
+import type { ErrorApiResponseInterface } from './types';
 
-const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+export interface BackendClientInterface extends HttpClientInterface {} // eslint-disable-line
 
-const apiRequest = async <T>(
-  url: string,
-  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
-  data?: unknown,
-): Promise<T> => {
-  const response: AxiosResponse<T> = await apiClient({
-    method,
-    url,
-    data,
-  });
+export function createBackendClient(): BackendClientInterface {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
+  return new FetchHttpClient(baseUrl);
+}
 
-  return response.data;
-};
+export const backendClient = createBackendClient();
 
-export const backendApi = {
-  request: apiRequest,
-};
+export { type ErrorApiResponseInterface };
+export * from './types';
