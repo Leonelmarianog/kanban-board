@@ -1,7 +1,7 @@
 import type { AuthTokenInterface } from '@/entities/AuthTokenInterface.ts';
 
 export class AuthToken implements AuthTokenInterface {
-  public constructor(private readonly token: string) {}
+  public constructor(public readonly token: string) {}
 
   public getToken() {
     return this.token;
