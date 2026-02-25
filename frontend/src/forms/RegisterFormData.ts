@@ -3,11 +3,11 @@ import type { RegisterRequestInterface } from '@/services/backend/auth/types.ts'
 
 export class RegisterFormData extends BaseFormData<RegisterRequestInterface> {
   public constructor(
-    private readonly first_name: string,
-    private readonly last_name: string,
-    private readonly email: string,
-    private readonly password: string,
-    private readonly password_confirmation: string,
+    public readonly first_name: string,
+    public readonly last_name: string,
+    public readonly email: string,
+    public readonly password: string,
+    public readonly password_confirmation: string,
   ) {
     super();
   }
