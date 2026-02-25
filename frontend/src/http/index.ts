@@ -1,3 +1,3 @@
 export { FetchHttpClient } from './FetchHttpClient';
-export { HttpError } from './types';
+export { HttpError } from './HttpError';
 export type { HttpClientInterface, HttpMethod, HttpRequestOptions } from './types';

@@ -13,13 +13,3 @@ export interface HttpRequestOptions {
   headers?: Record<string, string>;
   baseUrl?: string;
 }
-
-export class HttpError extends Error {
-  constructor(
-    public readonly status: number,
-    public readonly data: unknown,
-  ) {
-    super(`HTTP Error: ${status}`);
-    this.name = 'HttpError';
-  }
-}
