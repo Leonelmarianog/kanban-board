@@ -28,15 +28,15 @@ const schema = yup.object({
     .oneOf([yup.ref('password')], 'The password field confirmation does not match.'),
 });
 
-const save = (values: Record<string, string>) => {
+const save = (values: Record<string, unknown>) => {
   const { first_name, last_name, email, password, password_confirmation } = values;
 
   const registerFormData = new RegisterFormData(
-    first_name,
-    last_name,
-    email,
-    password,
-    password_confirmation,
+    first_name as string,
+    last_name as string,
+    email as string,
+    password as string,
+    password_confirmation as string,
   );
 
   emit('save', registerFormData);
