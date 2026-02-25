@@ -1,12 +1,9 @@
-import type { ApiResponseInterface } from '@/api/backend/types.ts';
-import type { AuthTokenInterface } from '@/entities/AuthTokenInterface.ts';
+import type { BaseRequestInterface } from '@/services/backend/types.ts';
 
-export interface RegisterRequestInterface {
+export interface RegisterRequestInterface extends BaseRequestInterface {
   first_name: string;
   last_name: string;
   email: string;
   password: string;
   password_confirmation: string;
 }
-
-export interface RegisterResponseInterface extends ApiResponseInterface<AuthTokenInterface> {} // eslint-disable-line
