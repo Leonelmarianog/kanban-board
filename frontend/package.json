@@ -24,7 +24,6 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/vue-query": "^5.92.9",
-    "axios": "^1.13.5",
     "lucide-vue-next": "^0.563.0",
     "pinia": "^3.0.4",
     "tailwindcss": "^4.1.18",
@@ -37,6 +36,7 @@
   "devDependencies": {
     "@playwright/test": "^1.57.0",
     "@tsconfig/node24": "^24.0.3",
+    "@types/jest": "^30.0.0",
     "@types/jsdom": "^27.0.0",
     "@types/node": "^24.10.4",
     "@vitejs/plugin-vue": "^6.0.3",
