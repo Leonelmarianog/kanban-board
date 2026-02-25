@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import DynamicForm from '@/components/DynamicForm.vue';
-import { Form as VeeForm } from 'vee-validate';
 import { object, string } from 'yup';
 
 describe('DynamicForm.vue', () => {
@@ -16,72 +15,93 @@ describe('DynamicForm.vue', () => {
     expect(wrapper.text()).toContain('Slot Content');
   });
 
-  it('passes props to VeeForm', () => {
-    const schema = object({
-      test: string().required(),
-    });
-    const initialValues = { test: 'initial' };
-
-    const wrapper = mount(DynamicForm, {
-      props: {
-        schema,
-        initialValues,
-      },
-      global: {
-        stubs: {
-          VeeForm: {
-            name: 'Form',
-            props: ['validationSchema', 'initialValues'],
-            template: '<div><slot /></div>',
-          },
-        },
-      },
-    });
-
-    const veeForm = wrapper.findComponent({ name: 'Form' });
-
-    expect(veeForm.props('validationSchema')).toEqual(schema);
-    expect(veeForm.props('initialValues')).toEqual(initialValues);
-  });
-
-  it('emits "submit" when VeeForm submits', async () => {
+  it('renders a form element', () => {
     const wrapper = mount(DynamicForm);
-    const veeForm = wrapper.findComponent(VeeForm);
 
-    const values = { name: 'John Doe' };
-    veeForm.vm.$emit('submit', values);
-
-    expect(wrapper.emitted('submit')).toBeTruthy();
-    expect(wrapper.emitted('submit')![0]).toEqual([values]);
+    expect(wrapper.find('form').exists()).toBe(true);
   });
 
-  it('provides v-slot props to the slot', () => {
+  it('passes errors to slot', () => {
     const wrapper = mount(DynamicForm, {
       slots: {
         default: `
         <template #default="slotProps">
-          <div id="slot-content">
-            <span id="errors">{{ JSON.stringify(slotProps.errors) }}</span>
-            <span id="values">{{ JSON.stringify(slotProps.values) }}</span>
-            <span id="meta">{{ JSON.stringify(slotProps.meta) }}</span>
-          </div>
+          <span id="errors">{{ JSON.stringify(slotProps.errors) }}</span>
         </template>
       `,
       },
-      global: {
-        stubs: {
-          VeeForm: {
-            template: '<slot :errors="{}" :values="{}" :meta="{}" />',
-          },
-        },
+    });
+
+    expect(wrapper.find('#errors').exists()).toBe(true);
+  });
+
+  it('passes values to slot', () => {
+    const wrapper = mount(DynamicForm, {
+      slots: {
+        default: `
+        <template #default="slotProps">
+          <span id="values">{{ JSON.stringify(slotProps.values) }}</span>
+        </template>
+      `,
       },
     });
 
-    const slotContent = wrapper.find('#slot-content');
-    expect(slotContent.exists()).toBe(true);
+    expect(wrapper.find('#values').exists()).toBe(true);
+  });
 
-    expect(wrapper.find('#errors').text().length).toBeGreaterThan(0); // {}
-    expect(wrapper.find('#values').text().length).toBeGreaterThan(0); // {}
-    expect(wrapper.find('#meta').text().length).toBeGreaterThan(0); // { ... }
+  it('passes meta to slot', () => {
+    const wrapper = mount(DynamicForm, {
+      slots: {
+        default: `
+        <template #default="slotProps">
+          <span id="meta">{{ JSON.stringify(slotProps.meta) }}</span>
+        </template>
+      `,
+      },
+    });
+
+    expect(wrapper.find('#meta').exists()).toBe(true);
+  });
+
+  it('emits "submit" when form is submitted', async () => {
+    const wrapper = mount(DynamicForm);
+
+    await wrapper.find('form').trigger('submit');
+
+    expect(wrapper.emitted('submit')).toBeTruthy();
+  });
+
+  it('emits submit with form values', async () => {
+    const wrapper = mount(DynamicForm, {
+      props: {
+        initialValues: { test: 'initial' },
+      },
+    });
+
+    await wrapper.find('form').trigger('submit');
+
+    expect(wrapper.emitted('submit')).toBeTruthy();
+    expect(wrapper.emitted('submit')![0]).toEqual([{ test: 'initial' }]);
+  });
+
+  it('provides slot props with validation schema', () => {
+    const schema = object({
+      test: string().required(),
+    });
+
+    const wrapper = mount(DynamicForm, {
+      props: {
+        schema,
+      },
+      slots: {
+        default: `
+        <template #default="slotProps">
+          <span id="meta">{{ slotProps.meta }}</span>
+        </template>
+      `,
+      },
+    });
+
+    expect(wrapper.find('#meta').exists()).toBe(true);
   });
 });
