@@ -1,19 +1,19 @@
-export interface BaseApiResponseInterface {
-  success: boolean;
+export interface BackendSuccessResponseInterface<T> {
+  success: true;
   message: string;
   status: number;
-}
-
-export interface ApiResponseInterface<T> extends BaseApiResponseInterface {
   data: T;
 }
 
-export interface ErrorApiResponseInterface extends BaseApiResponseInterface {
-  errors: {
+export interface BackendErrorResponseInterface {
+  success: false;
+  message: string;
+  status: number;
+  error: {
     type: string;
     message: string;
     code: number;
     timestamp: string;
-    validation_errors: Record<string, string[]>;
+    validation_errors?: Record<string, string[]>;
   };
 }

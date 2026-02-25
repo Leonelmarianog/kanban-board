@@ -1,14 +1,12 @@
-import { FetchHttpClient, type HttpClientInterface } from '@/http';
-import type { ErrorApiResponseInterface } from './types';
+import { FetchHttpClient } from '@/http';
+import { BackendClient } from './BackendClient';
 
-export interface BackendClientInterface extends HttpClientInterface {} // eslint-disable-line
-
-export function createBackendClient(): BackendClientInterface {
+export function createBackendClient(): BackendClient {
   const baseUrl = import.meta.env.VITE_API_BASE_URL;
-  return new FetchHttpClient(baseUrl);
+  const httpClient = new FetchHttpClient(baseUrl);
+  return new BackendClient(httpClient);
 }
 
 export const backendClient = createBackendClient();
-
-export { type ErrorApiResponseInterface };
+export { BackendError } from './BackendError.ts';
 export * from './types';
