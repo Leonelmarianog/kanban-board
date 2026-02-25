@@ -32,13 +32,13 @@ describe('FetchHttpClient', () => {
 
       expect(fetch).toHaveBeenCalledWith('https://api.example.com/users', {
         method: 'GET',
-        headers: undefined,
+        headers: { 'Content-Type': 'application/json' },
         body: null,
       });
       expect(result).toEqual(responseData);
     });
 
-    it('should make a POST request with JSON body', async () => {
+    it('should make a POST request with JSON body and Content-Type header', async () => {
       const requestData = { name: 'New User' };
       const responseData = { id: 1, name: 'New User' };
       vi.spyOn(global, 'fetch').mockResolvedValueOnce({
@@ -50,13 +50,13 @@ describe('FetchHttpClient', () => {
 
       expect(fetch).toHaveBeenCalledWith('https://api.example.com/users', {
         method: 'POST',
-        headers: undefined,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestData),
       });
       expect(result).toEqual(responseData);
     });
 
-    it('should make a PUT request with JSON body', async () => {
+    it('should make a PUT request with JSON body and Content-Type header', async () => {
       const requestData = { name: 'Updated User' };
       const responseData = { id: 1, name: 'Updated User' };
       vi.spyOn(global, 'fetch').mockResolvedValueOnce({
@@ -68,13 +68,13 @@ describe('FetchHttpClient', () => {
 
       expect(fetch).toHaveBeenCalledWith('https://api.example.com/users/1', {
         method: 'PUT',
-        headers: undefined,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestData),
       });
       expect(result).toEqual(responseData);
     });
 
-    it('should make a PATCH request with JSON body', async () => {
+    it('should make a PATCH request with JSON body and Content-Type header', async () => {
       const requestData = { name: 'Patched User' };
       const responseData = { id: 1, name: 'Patched User' };
       vi.spyOn(global, 'fetch').mockResolvedValueOnce({
@@ -86,7 +86,7 @@ describe('FetchHttpClient', () => {
 
       expect(fetch).toHaveBeenCalledWith('https://api.example.com/users/1', {
         method: 'PATCH',
-        headers: undefined,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestData),
       });
       expect(result).toEqual(responseData);
@@ -103,7 +103,7 @@ describe('FetchHttpClient', () => {
 
       expect(fetch).toHaveBeenCalledWith('https://api.example.com/users/1', {
         method: 'DELETE',
-        headers: undefined,
+        headers: { 'Content-Type': 'application/json' },
         body: null,
       });
       expect(result).toEqual(responseData);
@@ -136,12 +136,12 @@ describe('FetchHttpClient', () => {
 
       expect(fetch).toHaveBeenCalledWith('https://custom.api.com/users', {
         method: 'GET',
-        headers: undefined,
+        headers: { 'Content-Type': 'application/json' },
         body: null,
       });
     });
 
-    it('should send FormData without stringifying', async () => {
+    it('should send FormData without Content-Type header', async () => {
       const formData = new FormData();
       formData.append('name', 'Test User');
       vi.spyOn(global, 'fetch').mockResolvedValueOnce({
@@ -235,6 +235,75 @@ describe('FetchHttpClient', () => {
         expect.any(String),
         expect.objectContaining({
           body: null,
+        }),
+      );
+    });
+  });
+
+  describe('buildHeaders (private method behavior)', () => {
+    it('should set Content-Type to application/json for object data', async () => {
+      vi.spyOn(global, 'fetch').mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({}),
+      } as Response);
+
+      await client.request('/users', 'POST', { name: 'John' });
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      );
+    });
+
+    it('should not set Content-Type for FormData', async () => {
+      const formData = new FormData();
+      formData.append('name', 'John');
+      vi.spyOn(global, 'fetch').mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({}),
+      } as Response);
+
+      await client.request('/upload', 'POST', formData);
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: undefined,
+        }),
+      );
+    });
+
+    it('should use custom headers when provided', async () => {
+      const customHeaders = { Authorization: 'Bearer token', 'Content-Type': 'text/plain' };
+      vi.spyOn(global, 'fetch').mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({}),
+      } as Response);
+
+      await client.request('/users', 'POST', { name: 'John' }, { headers: customHeaders });
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: customHeaders,
+        }),
+      );
+    });
+
+    it('should set Content-Type to application/json for requests without data', async () => {
+      vi.spyOn(global, 'fetch').mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({}),
+      } as Response);
+
+      await client.request('/users', 'GET');
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: { 'Content-Type': 'application/json' },
         }),
       );
     });

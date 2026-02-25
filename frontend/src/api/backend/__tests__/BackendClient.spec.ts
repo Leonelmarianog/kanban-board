@@ -30,7 +30,7 @@ describe('BackendClient', () => {
   });
 
   describe('request', () => {
-    it('should make a request with Content-Type header', async () => {
+    it('should make a GET request', async () => {
       const responseData: BackendSuccessResponseInterface<{ id: number }> = {
         success: true,
         message: 'Success',
@@ -41,9 +41,7 @@ describe('BackendClient', () => {
 
       const result = await backendClient.request<{ id: number }>('/users', 'GET');
 
-      expect(mockHttpClient.request).toHaveBeenCalledWith('/users', 'GET', undefined, {
-        headers: { 'Content-Type': 'application/json' },
-      });
+      expect(mockHttpClient.request).toHaveBeenCalledWith('/users', 'GET', undefined);
       expect(result).toEqual(responseData);
     });
 
@@ -63,9 +61,7 @@ describe('BackendClient', () => {
         requestData,
       );
 
-      expect(mockHttpClient.request).toHaveBeenCalledWith('/users', 'POST', requestData, {
-        headers: { 'Content-Type': 'application/json' },
-      });
+      expect(mockHttpClient.request).toHaveBeenCalledWith('/users', 'POST', requestData);
       expect(result).toEqual(responseData);
     });
 
@@ -85,9 +81,7 @@ describe('BackendClient', () => {
         requestData,
       );
 
-      expect(mockHttpClient.request).toHaveBeenCalledWith('/users/1', 'PUT', requestData, {
-        headers: { 'Content-Type': 'application/json' },
-      });
+      expect(mockHttpClient.request).toHaveBeenCalledWith('/users/1', 'PUT', requestData);
       expect(result).toEqual(responseData);
     });
 
@@ -102,9 +96,25 @@ describe('BackendClient', () => {
 
       const result = await backendClient.request<null>('/users/1', 'DELETE');
 
-      expect(mockHttpClient.request).toHaveBeenCalledWith('/users/1', 'DELETE', undefined, {
-        headers: { 'Content-Type': 'application/json' },
-      });
+      expect(mockHttpClient.request).toHaveBeenCalledWith('/users/1', 'DELETE', undefined);
+      expect(result).toEqual(responseData);
+    });
+
+    it('should pass FormData without modification', async () => {
+      const formData = new FormData();
+      formData.append('name', 'John');
+      formData.append('email', 'john@example.com');
+      const responseData: BackendSuccessResponseInterface<{ id: number }> = {
+        success: true,
+        message: 'Created',
+        status: 201,
+        data: { id: 1 },
+      };
+      vi.mocked(mockHttpClient.request).mockResolvedValueOnce(responseData);
+
+      const result = await backendClient.request<{ id: number }>('/users', 'POST', formData);
+
+      expect(mockHttpClient.request).toHaveBeenCalledWith('/users', 'POST', formData);
       expect(result).toEqual(responseData);
     });
 

@@ -11,10 +11,11 @@ export class FetchHttpClient implements HttpClientInterface {
     options?: HttpRequestOptions,
   ): Promise<T> {
     const fullUrl = `${options?.baseUrl ?? this.baseUrl}${url}`;
+    const headers = this.buildHeaders(data, options?.headers);
 
     const response = await fetch(fullUrl, {
       method,
-      headers: options?.headers,
+      headers,
       body: this.parseData(data),
     });
 
@@ -24,6 +25,21 @@ export class FetchHttpClient implements HttpClientInterface {
     }
 
     return response.json();
+  }
+
+  private buildHeaders(
+    data: unknown,
+    customHeaders?: Record<string, string>,
+  ): Record<string, string> | undefined {
+    if (customHeaders) {
+      return customHeaders;
+    }
+
+    if (data instanceof FormData) {
+      return undefined;
+    }
+
+    return { 'Content-Type': 'application/json' };
   }
 
   private parseData(data: unknown): string | FormData | null {

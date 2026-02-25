@@ -15,9 +15,7 @@ export class BackendClient {
     data?: unknown,
   ): Promise<BackendSuccessResponseInterface<T>> {
     try {
-      return await this.http.request<BackendSuccessResponseInterface<T>>(url, method, data, {
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return await this.http.request<BackendSuccessResponseInterface<T>>(url, method, data);
     } catch (error) {
       if (error instanceof HttpError) {
         throw new BackendError(error.message, error.data as BackendErrorResponseInterface);
