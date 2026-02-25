@@ -1,16 +1,20 @@
-import { useMutation } from '@tanstack/vue-query';
+import { useAuthStore } from '@/stores/auth.ts';
 import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
-import { authService } from '@/services/backend/auth';
-import type { RegisterFormData } from '@/forms/RegisterFormData';
-import type { AuthToken } from '@/entities/AuthToken';
+import { useMutation } from '@tanstack/vue-query';
+import {
+  authService,
+  AuthServiceError,
+  type RegisterRequestInterface,
+} from '@/services/backend/auth';
+import type { AuthToken } from '@/entities/AuthToken.ts';
+import { computed } from 'vue';
 
 export function useRegister() {
   const authStore = useAuthStore();
   const router = useRouter();
 
   const { mutate, isPending, error } = useMutation({
-    mutationFn: (data: RegisterFormData) => authService.register(data),
+    mutationFn: (data: RegisterRequestInterface) => authService.register(data),
 
     onSuccess: (data: AuthToken) => {
       authStore.setAuth(data.getToken());
@@ -20,7 +24,7 @@ export function useRegister() {
 
   return {
     register: mutate,
-    isLoading: isPending as boolean,
-    error,
+    isLoading: computed(() => isPending.value),
+    error: computed(() => error.value as AuthServiceError | null),
   };
 }
