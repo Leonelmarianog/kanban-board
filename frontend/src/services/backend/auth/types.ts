@@ -7,3 +7,8 @@ export interface RegisterRequestInterface extends BaseRequestInterface {
   password: string;
   password_confirmation: string;
 }
+
+export interface LoginRequestInterface extends BaseRequestInterface {
+  email: string;
+  password: string;
+}
