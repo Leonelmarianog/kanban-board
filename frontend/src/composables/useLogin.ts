@@ -2,7 +2,7 @@ import { useAuthStore } from '@/stores/auth.ts';
 import { useRouter } from 'vue-router';
 import { useMutation } from '@tanstack/vue-query';
 import { authService, AuthServiceError, type LoginRequestInterface } from '@/services/backend/auth';
-import type { AuthToken } from '@/entities/AuthToken.ts';
+import { memberService } from '@/services/backend/member';
 import { computed } from 'vue';
 
 export function useLogin() {
@@ -10,10 +10,15 @@ export function useLogin() {
   const router = useRouter();
 
   const { mutate, isPending, error } = useMutation({
-    mutationFn: (data: LoginRequestInterface) => authService.login(data),
+    mutationFn: async (data: LoginRequestInterface) => {
+      const token = await authService.login(data);
+      const member = await memberService.getMe(token.getToken());
+      return { token, member };
+    },
 
-    onSuccess: (data: AuthToken) => {
-      authStore.setAuth(data.getToken());
+    onSuccess: ({ token, member }) => {
+      authStore.setAuth(token.getToken());
+      authStore.setMember(member);
       router.push('/');
     },
   });

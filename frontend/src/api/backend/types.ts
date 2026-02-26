@@ -17,3 +17,12 @@ export interface BackendErrorResponseInterface {
     validation_errors?: Record<string, string[]>;
   };
 }
+
+export interface MemberJsonInterface {
+  id: string;
+  full_name: string;
+  initials: string;
+  email: string;
+  avatar_url?: string;
+  bio?: string;
+}

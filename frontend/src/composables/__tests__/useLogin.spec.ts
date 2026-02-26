@@ -2,8 +2,10 @@ import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { ref } from 'vue';
 import { useLogin } from '@/composables/useLogin';
 import { authService, AuthServiceError } from '@/services/backend/auth';
+import { memberService } from '@/services/backend/member';
 import type { LoginRequestInterface } from '@/services/backend/auth/types';
 import type { AuthToken } from '@/entities/AuthToken';
+import type { Member } from '@/entities/Member';
 
 vi.mock('@/stores/auth', () => ({
   useAuthStore: vi.fn(),
@@ -28,23 +30,36 @@ vi.mock('@/services/backend/auth', async (importOriginal) => {
   };
 });
 
+vi.mock('@/services/backend/member', () => ({
+  memberService: {
+    getMe: vi.fn(),
+  },
+}));
+
 import { useAuthStore } from '@/stores/auth';
 import { useRouter } from 'vue-router';
 import { useMutation } from '@tanstack/vue-query';
 
+interface MutationResult {
+  token: AuthToken;
+  member: Member;
+}
+
 interface MutationConfig {
-  mutationFn: (data: LoginRequestInterface) => Promise<AuthToken>;
-  onSuccess: (data: AuthToken) => void;
+  mutationFn: (data: LoginRequestInterface) => Promise<MutationResult>;
+  onSuccess: (data: MutationResult) => void;
 }
 
 describe('useLogin', () => {
   let mockSetAuth: Mock;
+  let mockSetMember: Mock;
   let mockPush: Mock;
   let mutationConfig: MutationConfig;
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockSetAuth = vi.fn();
+    mockSetMember = vi.fn();
     mockPush = vi.fn();
     mutationConfig = {
       mutationFn: vi.fn(),
@@ -53,6 +68,7 @@ describe('useLogin', () => {
 
     vi.mocked(useAuthStore).mockReturnValue({
       setAuth: mockSetAuth,
+      setMember: mockSetMember,
     } as unknown as ReturnType<typeof useAuthStore>);
 
     vi.mocked(useRouter).mockReturnValue({
@@ -77,9 +93,16 @@ describe('useLogin', () => {
     expect(error.value).toBeNull();
   });
 
-  it('should call authService.login with data when mutate is called', async () => {
+  it('should call authService.login and memberService.getMe with data when mutate is called', async () => {
     const mockAuthToken = { getToken: () => 'test-token' } as AuthToken;
+    const mockMember = {
+      id: '1',
+      full_name: 'John Doe',
+      initials: 'JD',
+      email: 'john@example.com',
+    } as Member;
     vi.mocked(authService.login).mockResolvedValueOnce(mockAuthToken);
+    vi.mocked(memberService.getMe).mockResolvedValueOnce(mockMember);
 
     useLogin();
 
@@ -92,16 +115,24 @@ describe('useLogin', () => {
     await mutationConfig.mutationFn(mockData);
 
     expect(authService.login).toHaveBeenCalledWith(mockData);
+    expect(memberService.getMe).toHaveBeenCalledWith('test-token');
   });
 
-  it('should set auth token and redirect on success', () => {
+  it('should set auth token, member, and redirect on success', () => {
     const mockAuthToken = { getToken: () => 'new-auth-token' } as AuthToken;
+    const mockMember = {
+      id: '1',
+      full_name: 'John Doe',
+      initials: 'JD',
+      email: 'john@example.com',
+    } as Member;
 
     useLogin();
 
-    mutationConfig.onSuccess(mockAuthToken);
+    mutationConfig.onSuccess({ token: mockAuthToken, member: mockMember });
 
     expect(mockSetAuth).toHaveBeenCalledWith('new-auth-token');
+    expect(mockSetMember).toHaveBeenCalledWith(mockMember);
     expect(mockPush).toHaveBeenCalledWith('/');
   });
 
