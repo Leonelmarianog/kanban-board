@@ -31,15 +31,21 @@ export class FetchHttpClient implements HttpClientInterface {
     data: unknown,
     customHeaders?: Record<string, string>,
   ): Record<string, string> | undefined {
-    if (customHeaders) {
-      return customHeaders;
+    const defaultHeaders: Record<string, string> = {};
+
+    if (!(data instanceof FormData)) {
+      defaultHeaders['Content-Type'] = 'application/json';
     }
 
-    if (data instanceof FormData) {
+    if (customHeaders) {
+      return { ...defaultHeaders, ...customHeaders };
+    }
+
+    if (Object.keys(defaultHeaders).length === 0) {
       return undefined;
     }
 
-    return { 'Content-Type': 'application/json' };
+    return defaultHeaders;
   }
 
   private parseData(data: unknown): string | FormData | null {

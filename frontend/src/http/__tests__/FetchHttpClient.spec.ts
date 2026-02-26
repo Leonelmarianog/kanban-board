@@ -109,7 +109,7 @@ describe('FetchHttpClient', () => {
       expect(result).toEqual(responseData);
     });
 
-    it('should include custom headers in the request', async () => {
+    it('should merge custom headers with default headers', async () => {
       const headers = { Authorization: 'Bearer token' };
       vi.spyOn(global, 'fetch').mockResolvedValueOnce({
         ok: true,
@@ -120,7 +120,7 @@ describe('FetchHttpClient', () => {
 
       expect(fetch).toHaveBeenCalledWith('https://api.example.com/users', {
         method: 'GET',
-        headers,
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer token' },
         body: null,
       });
     });
@@ -275,7 +275,24 @@ describe('FetchHttpClient', () => {
       );
     });
 
-    it('should use custom headers when provided', async () => {
+    it('should merge custom headers with default Content-Type header', async () => {
+      const customHeaders = { Authorization: 'Bearer token' };
+      vi.spyOn(global, 'fetch').mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({}),
+      } as Response);
+
+      await client.request('/users', 'POST', { name: 'John' }, { headers: customHeaders });
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer token' },
+        }),
+      );
+    });
+
+    it('should allow custom headers to override default Content-Type', async () => {
       const customHeaders = { Authorization: 'Bearer token', 'Content-Type': 'text/plain' };
       vi.spyOn(global, 'fetch').mockResolvedValueOnce({
         ok: true,
@@ -288,6 +305,25 @@ describe('FetchHttpClient', () => {
         expect.any(String),
         expect.objectContaining({
           headers: customHeaders,
+        }),
+      );
+    });
+
+    it('should merge custom headers with FormData without Content-Type', async () => {
+      const formData = new FormData();
+      formData.append('name', 'John');
+      const customHeaders = { Authorization: 'Bearer token' };
+      vi.spyOn(global, 'fetch').mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({}),
+      } as Response);
+
+      await client.request('/upload', 'POST', formData, { headers: customHeaders });
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: { Authorization: 'Bearer token' },
         }),
       );
     });

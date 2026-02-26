@@ -284,4 +284,50 @@ describe('authService', () => {
       await expect(authService.login(mockRequest)).rejects.toBe('Some string error');
     });
   });
+
+  describe('logout', () => {
+    it('should call backendClient with correct parameters', async () => {
+      const successResponse: BackendSuccessResponseInterface<null> = {
+        success: true,
+        message: 'Logout successful',
+        status: 200,
+        data: null,
+      };
+
+      vi.mocked(backendClient.request).mockResolvedValueOnce(successResponse);
+
+      await authService.logout('test-token');
+
+      expect(backendClient.request).toHaveBeenCalledWith('/auth/logout', 'POST', undefined, {
+        headers: { Authorization: 'Bearer test-token' },
+      });
+    });
+
+    it('should convert BackendError to AuthServiceError', async () => {
+      const errorData: BackendErrorResponseInterface = {
+        success: false,
+        message: 'Unauthorized',
+        status: 401,
+        error: {
+          type: 'AuthenticationError',
+          message: 'Invalid token',
+          code: 401,
+          timestamp: '2024-01-01T00:00:00Z',
+        },
+      };
+      const backendError = new BackendError('Request failed', errorData);
+
+      vi.mocked(backendClient.request).mockRejectedValueOnce(backendError);
+
+      await expect(authService.logout('invalid-token')).rejects.toThrow(AuthServiceError);
+    });
+
+    it('should re-throw non-BackendError errors', async () => {
+      const networkError = new Error('Network error');
+
+      vi.mocked(backendClient.request).mockRejectedValueOnce(networkError);
+
+      await expect(authService.logout('test-token')).rejects.toThrow('Network error');
+    });
+  });
 });

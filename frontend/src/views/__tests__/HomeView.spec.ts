@@ -9,6 +9,21 @@ vi.mock('@/components/BoardContainer.vue', () => ({
   },
 }));
 
+vi.mock('@/composables/useLogout', () => ({
+  useLogout: vi.fn(() => ({
+    logout: vi.fn(),
+    isLoading: { value: false },
+    error: { value: null },
+  })),
+}));
+
+vi.mock('@/stores/auth', () => ({
+  useAuthStore: vi.fn(() => ({
+    isAuthenticated: true,
+    token: 'test-token',
+  })),
+}));
+
 describe('HomeView.vue', () => {
   it('renders the page heading', () => {
     const wrapper = mount(HomeView);
