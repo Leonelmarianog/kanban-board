@@ -17,5 +17,11 @@ export const useAuthStore = defineStore('auth', {
       this.isAuthenticated = true;
       localStorage.setItem('authToken', token);
     },
+
+    clearAuth() {
+      this.token = null;
+      this.isAuthenticated = false;
+      localStorage.removeItem('authToken');
+    },
   },
 });

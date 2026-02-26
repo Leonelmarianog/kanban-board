@@ -43,7 +43,22 @@ const login = async (data: LoginRequestInterface): Promise<AuthToken> => {
   }
 };
 
+const logout = async (token: string): Promise<void> => {
+  try {
+    await backendClient.request('/auth/logout', 'POST', undefined, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  } catch (error) {
+    if (error instanceof BackendError) {
+      throw AuthServiceError.fromBackendError(error);
+    }
+
+    throw error;
+  }
+};
+
 export const authService = {
   register,
   login,
+  logout,
 };

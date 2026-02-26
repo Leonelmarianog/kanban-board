@@ -41,7 +41,7 @@ describe('BackendClient', () => {
 
       const result = await backendClient.request<{ id: number }>('/users', 'GET');
 
-      expect(mockHttpClient.request).toHaveBeenCalledWith('/users', 'GET', undefined);
+      expect(mockHttpClient.request).toHaveBeenCalledWith('/users', 'GET', undefined, undefined);
       expect(result).toEqual(responseData);
     });
 
@@ -61,7 +61,7 @@ describe('BackendClient', () => {
         requestData,
       );
 
-      expect(mockHttpClient.request).toHaveBeenCalledWith('/users', 'POST', requestData);
+      expect(mockHttpClient.request).toHaveBeenCalledWith('/users', 'POST', requestData, undefined);
       expect(result).toEqual(responseData);
     });
 
@@ -81,7 +81,12 @@ describe('BackendClient', () => {
         requestData,
       );
 
-      expect(mockHttpClient.request).toHaveBeenCalledWith('/users/1', 'PUT', requestData);
+      expect(mockHttpClient.request).toHaveBeenCalledWith(
+        '/users/1',
+        'PUT',
+        requestData,
+        undefined,
+      );
       expect(result).toEqual(responseData);
     });
 
@@ -96,7 +101,12 @@ describe('BackendClient', () => {
 
       const result = await backendClient.request<null>('/users/1', 'DELETE');
 
-      expect(mockHttpClient.request).toHaveBeenCalledWith('/users/1', 'DELETE', undefined);
+      expect(mockHttpClient.request).toHaveBeenCalledWith(
+        '/users/1',
+        'DELETE',
+        undefined,
+        undefined,
+      );
       expect(result).toEqual(responseData);
     });
 
@@ -114,8 +124,23 @@ describe('BackendClient', () => {
 
       const result = await backendClient.request<{ id: number }>('/users', 'POST', formData);
 
-      expect(mockHttpClient.request).toHaveBeenCalledWith('/users', 'POST', formData);
+      expect(mockHttpClient.request).toHaveBeenCalledWith('/users', 'POST', formData, undefined);
       expect(result).toEqual(responseData);
+    });
+
+    it('should pass options to the HTTP client', async () => {
+      const responseData: BackendSuccessResponseInterface<null> = {
+        success: true,
+        message: 'Success',
+        status: 200,
+        data: null,
+      };
+      vi.mocked(mockHttpClient.request).mockResolvedValueOnce(responseData);
+
+      const options = { headers: { Authorization: 'Bearer token' } };
+      await backendClient.request<null>('/protected', 'GET', undefined, options);
+
+      expect(mockHttpClient.request).toHaveBeenCalledWith('/protected', 'GET', undefined, options);
     });
 
     it('should convert HttpError to BackendError', async () => {
