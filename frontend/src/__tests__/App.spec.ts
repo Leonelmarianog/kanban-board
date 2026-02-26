@@ -1,9 +1,24 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import App from '../App.vue';
 import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '../views/HomeView.vue';
 import { createPinia } from 'pinia';
+
+vi.mock('@/composables/useLogout', () => ({
+  useLogout: vi.fn(() => ({
+    logout: vi.fn(),
+    isLoading: { value: false },
+    error: { value: null },
+  })),
+}));
+
+vi.mock('@/stores/auth', () => ({
+  useAuthStore: vi.fn(() => ({
+    isAuthenticated: true,
+    token: 'test-token',
+  })),
+}));
 
 const routes = [
   {
