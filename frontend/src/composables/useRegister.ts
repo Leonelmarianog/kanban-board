@@ -6,7 +6,7 @@ import {
   AuthServiceError,
   type RegisterRequestInterface,
 } from '@/services/backend/auth';
-import type { AuthToken } from '@/entities/AuthToken.ts';
+import { memberService } from '@/services/backend/member';
 import { computed } from 'vue';
 
 export function useRegister() {
@@ -14,10 +14,15 @@ export function useRegister() {
   const router = useRouter();
 
   const { mutate, isPending, error } = useMutation({
-    mutationFn: (data: RegisterRequestInterface) => authService.register(data),
+    mutationFn: async (data: RegisterRequestInterface) => {
+      const token = await authService.register(data);
+      const member = await memberService.getMe(token.getToken());
+      return { token, member };
+    },
 
-    onSuccess: (data: AuthToken) => {
-      authStore.setAuth(data.getToken());
+    onSuccess: ({ token, member }) => {
+      authStore.setAuth(token.getToken());
+      authStore.setMember(member);
       router.push('/');
     },
   });
