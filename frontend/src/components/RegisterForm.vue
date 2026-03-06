@@ -18,13 +18,9 @@ const schema = yup.object({
   first_name: yup.string().required('The first name field is required.').min(2, 'Too short'),
   last_name: yup.string().required('The last name field is required.').min(2, 'Too short'),
   email: yup.string().required('The email field is required.').email('Must be a valid email'),
-  password: yup
-    .string()
-    .required('The password field is required.')
-    .min(8, 'Password must be at least 8 characters'),
+  password: yup.string().min(8, 'Password must be at least 8 characters'),
   password_confirmation: yup
     .string()
-    .required('The password confirmation field is required.')
     .oneOf([yup.ref('password')], 'The password field confirmation does not match.'),
 });
 
