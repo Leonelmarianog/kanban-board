@@ -1,96 +1,134 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { mount } from '@vue/test-utils';
-import { computed } from 'vue';
-import RegisterView from '@/views/RegisterView.vue';
-import { RegisterFormData } from '@/forms/RegisterFormData';
+import RegisterView from '../RegisterView.vue';
+import { server } from '@/../test/setup';
+import { http, HttpResponse } from 'msw';
+import { fillForm, submitForm, mountWithPlugins } from '@/../test/helpers';
 
-vi.mock('@/composables/useRegister', () => ({
-  useRegister: vi.fn(),
+const mockPush = vi.fn();
+vi.mock('vue-router', () => ({
+  useRouter: () => ({
+    push: mockPush,
+  }),
 }));
 
-vi.mock('@/components/RegisterForm.vue', () => ({
-  default: {
-    name: 'RegisterForm',
-    template: '<form data-testid="register-form"><slot /></form>',
-    props: ['isLoading', 'errors'],
-    emits: ['save'],
-  },
-}));
-
-import { useRegister } from '@/composables/useRegister';
-import type { AuthServiceError } from '@/services/backend/auth';
-
-describe('RegisterView.vue', () => {
-  const mockRegister = vi.fn();
-
+describe('RegisterView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useRegister).mockReturnValue({
-      register: mockRegister,
-      isLoading: computed(() => false),
-      error: computed(() => null),
-    } as unknown as ReturnType<typeof useRegister>);
+    localStorage.clear();
   });
 
-  it('renders RegisterForm component', () => {
-    const wrapper = mount(RegisterView);
+  it('should render the registration form', () => {
+    const wrapper = mountWithPlugins(RegisterView);
 
-    expect(wrapper.find('[data-testid="register-form"]').exists()).toBe(true);
+    expect(wrapper.find('h2').text()).toContain('Sign up to continue');
+    expect(wrapper.findAll('input')).toHaveLength(5);
+    expect(wrapper.find('button[type="submit"]').text()).toContain('Register');
   });
 
-  it('passes isLoading prop to RegisterForm', () => {
-    vi.mocked(useRegister).mockReturnValue({
-      register: mockRegister,
-      isLoading: computed(() => true),
-      error: computed(() => null),
-    } as unknown as ReturnType<typeof useRegister>);
+  it('should enable submit button when form is valid', async () => {
+    const wrapper = mountWithPlugins(RegisterView);
 
-    const wrapper = mount(RegisterView);
-    const registerForm = wrapper.findComponent({ name: 'RegisterForm' });
+    await fillForm(wrapper, {
+      first_name: 'John',
+      last_name: 'Doe',
+      email: 'john@example.com',
+      password: 'password123',
+      password_confirmation: 'password123',
+    });
 
-    expect(registerForm.props('isLoading')).toBe(true);
+    const submitButton = wrapper.find('button[type="submit"]');
+    expect(submitButton.attributes('disabled')).toBeUndefined();
   });
 
-  it('calls register when RegisterForm emits save', async () => {
-    const wrapper = mount(RegisterView);
-    const formData = new RegisterFormData(
-      'John',
-      'Doe',
-      'john@example.com',
-      'password',
-      'password',
+  it('should register successfully and navigate to home', async () => {
+    const wrapper = mountWithPlugins(RegisterView);
+
+    await fillForm(wrapper, {
+      first_name: 'John',
+      last_name: 'Doe',
+      email: 'john@example.com',
+      password: 'password123',
+      password_confirmation: 'password123',
+    });
+
+    await submitForm(wrapper);
+
+    await vi.waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith({ name: 'Home' });
+    });
+
+    expect(localStorage.getItem('authToken')).toBe('test-token-123');
+  });
+
+  it('should display validation errors from backend', async () => {
+    server.use(
+      http.post('*/api/auth/register', () => {
+        return HttpResponse.json(
+          {
+            success: false,
+            message: 'Validation failed',
+            status: 422,
+            error: {
+              type: 'ValidationError',
+              message: 'Validation failed',
+              code: 422,
+              timestamp: new Date().toISOString(),
+              validation_errors: {
+                email: ['An account with this email already exists.'],
+              },
+            },
+          },
+          { status: 422 },
+        );
+      }),
     );
 
-    const registerForm = wrapper.findComponent({ name: 'RegisterForm' });
-    await registerForm.vm.$emit('save', formData);
+    const wrapper = mountWithPlugins(RegisterView);
 
-    expect(mockRegister).toHaveBeenCalledWith(formData);
+    await fillForm(wrapper, {
+      first_name: 'John',
+      last_name: 'Doe',
+      email: 'duplicate@example.com',
+      password: 'password123',
+      password_confirmation: 'password123',
+    });
+
+    await submitForm(wrapper);
+
+    await vi.waitFor(() => {
+      expect(wrapper.html()).toContain('An account with this email already exists.');
+    });
+
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(localStorage.getItem('authToken')).toBeNull();
   });
 
-  it('passes validation errors to RegisterForm', () => {
-    const mockError = {
-      name: 'AuthServiceError',
-      message: 'Validation failed',
-      data: {
-        type: 'ValidationError',
-        message: 'Invalid data',
-        validationErrors: {
-          email: ['Email is required'],
-        },
-      },
-    } as AuthServiceError;
+  it('should show loading spinner during registration', async () => {
+    let resolveRegister: () => void;
+    server.use(
+      http.post('*/api/auth/register', () => {
+        return new Promise((resolve) => {
+          resolveRegister = resolve;
+        });
+      }),
+    );
 
-    vi.mocked(useRegister).mockReturnValue({
-      register: mockRegister,
-      isLoading: computed(() => false),
-      error: computed(() => mockError),
-    } as unknown as ReturnType<typeof useRegister>);
+    const wrapper = mountWithPlugins(RegisterView);
 
-    const wrapper = mount(RegisterView);
-    const registerForm = wrapper.findComponent({ name: 'RegisterForm' });
-
-    expect(registerForm.props('errors')).toEqual({
-      email: ['Email is required'],
+    await fillForm(wrapper, {
+      first_name: 'John',
+      last_name: 'Doe',
+      email: 'john@example.com',
+      password: 'password123',
+      password_confirmation: 'password123',
     });
+
+    await submitForm(wrapper);
+
+    await vi.waitFor(() => {
+      expect(wrapper.find('svg.animate-spin').exists()).toBe(true);
+    });
+
+    resolveRegister!();
   });
 });

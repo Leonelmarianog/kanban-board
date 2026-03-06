@@ -1,90 +1,122 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { mount } from '@vue/test-utils';
-import { computed } from 'vue';
-import LoginView from '@/views/LoginView.vue';
-import { LoginFormData } from '@/forms/LoginFormData';
+import LoginView from '../LoginView.vue';
+import { server } from '@/../test/setup';
+import { http, HttpResponse } from 'msw';
+import { fillForm, submitForm, mountWithPlugins } from '@/../test/helpers';
 
-vi.mock('@/composables/useLogin', () => ({
-  useLogin: vi.fn(),
+const mockPush = vi.fn();
+vi.mock('vue-router', () => ({
+  useRouter: () => ({
+    push: mockPush,
+  }),
 }));
 
-vi.mock('@/components/LoginForm.vue', () => ({
-  default: {
-    name: 'LoginForm',
-    template: '<form data-testid="login-form"><slot /></form>',
-    props: ['isLoading', 'errors'],
-    emits: ['save'],
-  },
-}));
-
-import { useLogin } from '@/composables/useLogin';
-import type { AuthServiceError } from '@/services/backend/auth';
-
-describe('LoginView.vue', () => {
-  const mockLogin = vi.fn();
-
+describe('LoginView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useLogin).mockReturnValue({
-      login: mockLogin,
-      isLoading: computed(() => false),
-      error: computed(() => null),
-    } as unknown as ReturnType<typeof useLogin>);
+    localStorage.clear();
   });
 
-  it('renders LoginForm component', () => {
-    const wrapper = mount(LoginView);
+  it('should render the login form', () => {
+    const wrapper = mountWithPlugins(LoginView);
 
-    expect(wrapper.find('[data-testid="login-form"]').exists()).toBe(true);
+    expect(wrapper.find('h2').text()).toContain('Sign in to continue');
+    expect(wrapper.findAll('input')).toHaveLength(2);
+    expect(wrapper.find('button[type="submit"]').text()).toContain('Login');
   });
 
-  it('passes isLoading prop to LoginForm', () => {
-    vi.mocked(useLogin).mockReturnValue({
-      login: mockLogin,
-      isLoading: computed(() => true),
-      error: computed(() => null),
-    } as unknown as ReturnType<typeof useLogin>);
+  it('should enable submit button when form is valid', async () => {
+    const wrapper = mountWithPlugins(LoginView);
 
-    const wrapper = mount(LoginView);
-    const loginForm = wrapper.findComponent({ name: 'LoginForm' });
-
-    expect(loginForm.props('isLoading')).toBe(true);
-  });
-
-  it('calls login when LoginForm emits save', async () => {
-    const wrapper = mount(LoginView);
-    const formData = new LoginFormData('john@example.com', 'password');
-
-    const loginForm = wrapper.findComponent({ name: 'LoginForm' });
-    await loginForm.vm.$emit('save', formData);
-
-    expect(mockLogin).toHaveBeenCalledWith(formData);
-  });
-
-  it('passes validation errors to LoginForm', () => {
-    const mockError = {
-      name: 'AuthServiceError',
-      message: 'Validation failed',
-      data: {
-        type: 'ValidationError',
-        message: 'Invalid data',
-        validationErrors: {
-          email: ['Email is required'],
-        },
-      },
-    } as AuthServiceError;
-
-    vi.mocked(useLogin).mockReturnValue({
-      login: mockLogin,
-      isLoading: computed(() => false),
-      error: computed(() => mockError),
-    } as unknown as ReturnType<typeof useLogin>);
-
-    const wrapper = mount(LoginView);
-    const loginForm = wrapper.findComponent({ name: 'LoginForm' });
-
-    expect(loginForm.props('errors')).toEqual({
-      email: ['Email is required'],
+    await fillForm(wrapper, {
+      email: 'test@example.com',
+      password: 'password123',
     });
+
+    const submitButton = wrapper.find('button[type="submit"]');
+    expect(submitButton.attributes('disabled')).toBeUndefined();
+  });
+
+  it('should login successfully and navigate to home', async () => {
+    const wrapper = mountWithPlugins(LoginView);
+
+    await fillForm(wrapper, {
+      email: 'test@example.com',
+      password: 'password123',
+    });
+
+    await submitForm(wrapper);
+
+    await vi.waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith({ name: 'Home' });
+    });
+
+    expect(localStorage.getItem('authToken')).toBe('test-token-123');
+  });
+
+  it('should display validation errors from backend', async () => {
+    server.use(
+      http.post('*/api/auth/login', () => {
+        return HttpResponse.json(
+          {
+            success: false,
+            message: 'Validation failed',
+            status: 422,
+            error: {
+              type: 'ValidationError',
+              message: 'Validation failed',
+              code: 422,
+              timestamp: new Date().toISOString(),
+              validation_errors: {
+                email: ['Invalid email or password.'],
+              },
+            },
+          },
+          { status: 422 },
+        );
+      }),
+    );
+
+    const wrapper = mountWithPlugins(LoginView);
+
+    await fillForm(wrapper, {
+      email: 'wrong@example.com',
+      password: 'wrongpassword',
+    });
+
+    await submitForm(wrapper);
+
+    await vi.waitFor(() => {
+      expect(wrapper.html()).toContain('Invalid email or password.');
+    });
+
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(localStorage.getItem('authToken')).toBeNull();
+  });
+
+  it('should show loading spinner during login', async () => {
+    let resolveLogin: () => void;
+    server.use(
+      http.post('*/api/auth/login', () => {
+        return new Promise((resolve) => {
+          resolveLogin = resolve;
+        });
+      }),
+    );
+
+    const wrapper = mountWithPlugins(LoginView);
+
+    await fillForm(wrapper, {
+      email: 'test@example.com',
+      password: 'password123',
+    });
+
+    await submitForm(wrapper);
+
+    await vi.waitFor(() => {
+      expect(wrapper.find('svg.animate-spin').exists()).toBe(true);
+    });
+
+    resolveLogin!();
   });
 });

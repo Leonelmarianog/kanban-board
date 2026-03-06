@@ -1,13 +1,29 @@
 <script setup lang="ts">
+import { useRouter } from 'vue-router';
+import { useRegister } from '@/composables/mutations/useRegister';
+import { useValidationErrors } from '@/composables/shared/useValidationErrors';
+import { useAuthStore } from '@/stores/auth';
 import RegisterForm from '@/components/RegisterForm.vue';
-import type { RegisterFormData } from '@/forms/RegisterFormData.ts';
-import { useRegister } from '@/composables/useRegister.ts';
+import type { RegisterFormData } from '@/forms/RegisterFormData';
 
-const { register, isLoading, error } = useRegister();
+const router = useRouter();
+const authStore = useAuthStore();
+const { register, isLoading } = useRegister();
+const { errors: validationErrors, setErrors } = useValidationErrors();
 
-const handleRegister = (values: RegisterFormData) => {
-  register(values);
-};
+function registerAndRedirect(formData: RegisterFormData) {
+  register(formData, {
+    onSuccess: (result) => {
+      if (!result.success) {
+        setErrors(result.error.validation_errors);
+        return;
+      }
+
+      authStore.setAuth(result.data.token);
+      router.push({ name: 'Home' });
+    },
+  });
+}
 </script>
 
 <template>
@@ -16,9 +32,9 @@ const handleRegister = (values: RegisterFormData) => {
       <div class="h-full flex justify-center items-center">
         <div class="w-[25em]">
           <RegisterForm
-            @save="handleRegister"
             :isLoading="isLoading"
-            :errors="error?.data?.validationErrors"
+            :errors="validationErrors"
+            @save="registerAndRedirect"
           />
         </div>
       </div>

@@ -1,7 +1,7 @@
 import { BaseFormData } from '@/forms/BaseFormData.ts';
-import type { LoginRequestInterface } from '@/services/backend/auth/types.ts';
+import type { LoginRequest } from '@/api/backend/types.ts';
 
-export class LoginFormData extends BaseFormData<LoginRequestInterface> {
+export class LoginFormData extends BaseFormData<LoginRequest> {
   public constructor(
     public readonly email: string,
     public readonly password: string,

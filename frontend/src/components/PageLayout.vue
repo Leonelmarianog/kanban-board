@@ -1,9 +1,20 @@
 <script setup lang="ts">
-import { useLogout } from '@/composables/useLogout';
+import { useRouter } from 'vue-router';
+import { useLogout } from '@/composables/mutations/useLogout';
 import { useAuthStore } from '@/stores/auth';
 
-const { logout, isLoading } = useLogout();
+const router = useRouter();
 const authStore = useAuthStore();
+const { logout, isLoading } = useLogout();
+
+function logoutAndRedirect() {
+  logout(undefined, {
+    onSuccess: () => {
+      authStore.clearAuth();
+      router.push({ name: 'Login' });
+    },
+  });
+}
 </script>
 
 <template>
@@ -13,7 +24,7 @@ const authStore = useAuthStore();
 
       <button
         v-if="authStore.isAuthenticated"
-        @click="logout()"
+        @click="logoutAndRedirect"
         :disabled="isLoading"
         class="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >

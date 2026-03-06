@@ -1,39 +1,38 @@
-import { describe, it, expect, vi } from 'vitest';
-import { mount } from '@vue/test-utils';
-import HomeView from '@/views/HomeView.vue';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import HomeView from '../HomeView.vue';
+import { mountWithPlugins } from '@/../test/helpers';
 
+const mockPush = vi.fn();
+vi.mock('vue-router', () => ({
+  useRouter: () => ({
+    push: mockPush,
+  }),
+}));
+
+// Mock BoardContainer to keep tests focused on HomeView
 vi.mock('@/components/BoardContainer.vue', () => ({
   default: {
     name: 'BoardContainer',
-    template: '<div data-testid="board-container"></div>',
+    template: '<div data-testid="board-container">Board Content</div>',
   },
 }));
 
-vi.mock('@/composables/useLogout', () => ({
-  useLogout: vi.fn(() => ({
-    logout: vi.fn(),
-    isLoading: { value: false },
-    error: { value: null },
-  })),
-}));
+describe('HomeView', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorage.clear();
+  });
 
-vi.mock('@/stores/auth', () => ({
-  useAuthStore: vi.fn(() => ({
-    isAuthenticated: true,
-    token: 'test-token',
-  })),
-}));
-
-describe('HomeView.vue', () => {
-  it('renders the page heading', () => {
-    const wrapper = mount(HomeView);
+  it('should render the page heading', () => {
+    const wrapper = mountWithPlugins(HomeView);
 
     expect(wrapper.find('h1').text()).toBe('My board');
   });
 
-  it('renders BoardContainer component', () => {
-    const wrapper = mount(HomeView);
+  it('should render BoardContainer component', () => {
+    const wrapper = mountWithPlugins(HomeView);
 
     expect(wrapper.find('[data-testid="board-container"]').exists()).toBe(true);
+    expect(wrapper.find('[data-testid="board-container"]').text()).toBe('Board Content');
   });
 });

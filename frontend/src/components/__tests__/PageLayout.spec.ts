@@ -1,111 +1,87 @@
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
-import { computed } from 'vue';
-import { mount } from '@vue/test-utils';
-import PageLayout from '@/components/PageLayout.vue';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import PageLayout from '../PageLayout.vue';
+import { server } from '@/../test/setup';
+import { http } from 'msw';
+import { mountWithPlugins } from '@/../test/helpers';
 
-vi.mock('@/composables/useLogout', () => ({
-  useLogout: vi.fn(),
+const mockPush = vi.fn();
+vi.mock('vue-router', () => ({
+  useRouter: () => ({
+    push: mockPush,
+  }),
 }));
 
-vi.mock('@/stores/auth', () => ({
-  useAuthStore: vi.fn(),
-}));
-
-import { useLogout } from '@/composables/useLogout';
-import { useAuthStore } from '@/stores/auth';
-
-describe('PageLayout.vue', () => {
-  let mockLogout: Mock;
-
+describe('PageLayout', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockLogout = vi.fn();
-
-    vi.mocked(useLogout).mockReturnValue({
-      logout: mockLogout,
-      isLoading: computed(() => false),
-      error: computed(() => null),
-    });
+    localStorage.clear();
   });
 
-  it('renders slots', () => {
-    vi.mocked(useAuthStore).mockReturnValue({
-      isAuthenticated: false,
-    } as unknown as ReturnType<typeof useAuthStore>);
-
-    const wrapper = mount(PageLayout, {
+  it('should render slot content', () => {
+    const wrapper = mountWithPlugins(PageLayout, {
       slots: {
-        heading: '<h1>Title</h1>',
-        default: '<p>Content</p>',
+        default: '<div data-testid="content">Main content</div>',
+        heading: '<h1>Page Title</h1>',
       },
     });
 
-    expect(wrapper.find('header').text()).toBe('Title');
-    expect(wrapper.find('main').text()).toBe('Content');
+    expect(wrapper.find('[data-testid="content"]').exists()).toBe(true);
+    expect(wrapper.find('h1').text()).toBe('Page Title');
   });
 
-  it('does not show logout button when not authenticated', () => {
-    vi.mocked(useAuthStore).mockReturnValue({
-      isAuthenticated: false,
-    } as unknown as ReturnType<typeof useAuthStore>);
+  it('should not show logout button when not authenticated', () => {
+    const wrapper = mountWithPlugins(PageLayout);
 
-    const wrapper = mount(PageLayout);
-
-    expect(wrapper.find('button').exists()).toBe(false);
+    const logoutButton = wrapper.find('button');
+    expect(logoutButton.exists()).toBe(false);
   });
 
-  it('shows logout button when authenticated', () => {
-    vi.mocked(useAuthStore).mockReturnValue({
-      isAuthenticated: true,
-    } as unknown as ReturnType<typeof useAuthStore>);
+  it('should show logout button when authenticated', () => {
+    localStorage.setItem('authToken', 'test-token');
 
-    const wrapper = mount(PageLayout);
+    const wrapper = mountWithPlugins(PageLayout);
 
-    expect(wrapper.find('button').exists()).toBe(true);
-    expect(wrapper.find('button').text()).toBe('Logout');
+    const logoutButton = wrapper.find('button');
+    expect(logoutButton.exists()).toBe(true);
+    expect(logoutButton.text()).toBe('Logout');
   });
 
-  it('shows loading text when logout is in progress', () => {
-    vi.mocked(useAuthStore).mockReturnValue({
-      isAuthenticated: true,
-    } as unknown as ReturnType<typeof useAuthStore>);
+  it('should logout successfully and navigate to login', async () => {
+    localStorage.setItem('authToken', 'test-token');
 
-    vi.mocked(useLogout).mockReturnValue({
-      logout: mockLogout,
-      isLoading: computed(() => true),
-      error: computed(() => null),
+    const wrapper = mountWithPlugins(PageLayout);
+
+    const logoutButton = wrapper.find('button');
+    await logoutButton.trigger('click');
+
+    await vi.waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith({ name: 'Login' });
     });
 
-    const wrapper = mount(PageLayout);
-
-    expect(wrapper.find('button').text()).toBe('Logging out...');
+    expect(localStorage.getItem('authToken')).toBeNull();
   });
 
-  it('disables button when logout is in progress', () => {
-    vi.mocked(useAuthStore).mockReturnValue({
-      isAuthenticated: true,
-    } as unknown as ReturnType<typeof useAuthStore>);
+  it('should show loading state during logout', async () => {
+    localStorage.setItem('authToken', 'test-token');
 
-    vi.mocked(useLogout).mockReturnValue({
-      logout: mockLogout,
-      isLoading: computed(() => true),
-      error: computed(() => null),
+    let resolveLogout: () => void;
+    server.use(
+      http.post('*/api/auth/logout', () => {
+        return new Promise((resolve) => {
+          resolveLogout = resolve;
+        });
+      }),
+    );
+
+    const wrapper = mountWithPlugins(PageLayout);
+
+    const logoutButton = wrapper.find('button');
+    await logoutButton.trigger('click');
+
+    await vi.waitFor(() => {
+      expect(wrapper.find('button').text()).toBe('Logging out...');
     });
 
-    const wrapper = mount(PageLayout);
-
-    expect(wrapper.find('button').element.hasAttribute('disabled')).toBe(true);
-  });
-
-  it('calls logout when button is clicked', async () => {
-    vi.mocked(useAuthStore).mockReturnValue({
-      isAuthenticated: true,
-    } as unknown as ReturnType<typeof useAuthStore>);
-
-    const wrapper = mount(PageLayout);
-
-    await wrapper.find('button').trigger('click');
-
-    expect(mockLogout).toHaveBeenCalled();
+    resolveLogout!();
   });
 });

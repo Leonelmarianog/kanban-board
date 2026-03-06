@@ -3,7 +3,6 @@ import HomeView from '@/views/HomeView.vue';
 import RegisterView from '@/views/RegisterView.vue';
 import LoginView from '@/views/LoginView.vue';
 import { useAuthStore } from '@/stores/auth';
-import { memberService } from '@/services/backend/member';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -29,29 +28,17 @@ const router = createRouter({
   ],
 });
 
-router.beforeEach(async (to) => {
+router.beforeEach((to) => {
   const authStore = useAuthStore();
 
-  // Redirect authenticated users away from guest-only routes (login/register)
+  // Redirect authenticated users away from guest-only routes.
   if (to.meta.requiresGuest && authStore.isAuthenticated) {
     return { name: 'Home' };
   }
 
-  // Redirect unauthenticated users away from protected routes
+  // Redirect unauthenticated users away from protected routes.
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     return { name: 'Login' };
-  }
-
-  // Fetch member info for authenticated users if not already loaded
-  if (authStore.isAuthenticated && !authStore.member && authStore.token) {
-    try {
-      const member = await memberService.getMe(authStore.token);
-      authStore.setMember(member);
-    } catch {
-      // If fetching member fails (e.g., invalid token), clear auth
-      authStore.clearAuth();
-      return { name: 'Login' };
-    }
   }
 });
 

@@ -1,7 +1,7 @@
 import { BaseFormData } from '@/forms/BaseFormData.ts';
-import type { RegisterRequestInterface } from '@/services/backend/auth/types.ts';
+import type { RegisterRequest } from '@/api/backend/types.ts';
 
-export class RegisterFormData extends BaseFormData<RegisterRequestInterface> {
+export class RegisterFormData extends BaseFormData<RegisterRequest> {
   public constructor(
     public readonly first_name: string,
     public readonly last_name: string,
