@@ -5,22 +5,42 @@ import { useValidationErrors } from '@/composables/shared/useValidationErrors';
 import { useAuthStore } from '@/stores/auth';
 import LoginForm from '@/components/LoginForm.vue';
 import type { LoginFormData } from '@/forms/LoginFormData';
+import { useToast } from 'vue-toastification';
 
 const router = useRouter();
 const authStore = useAuthStore();
 const { login, isLoading } = useLogin();
 const { errors: validationErrors, setErrors } = useValidationErrors();
+const toast = useToast();
 
 function loginAndRedirect(formData: LoginFormData) {
   login(formData, {
     onSuccess: (result) => {
       if (!result.success) {
-        setErrors(result.error.validation_errors);
+        if (result.error.type === 'ValidationException') {
+          setErrors(result.error.validation_errors);
+          return;
+        }
+
+        if (result.error.type === 'AuthenticationFailedException') {
+          toast.error('Username or password incorrect.');
+          return;
+        }
+
+        toast.error(
+          'An issue occurred while performing this action, please try again or contact support.',
+        );
         return;
       }
 
       authStore.setAuth(result.data.token);
       router.push({ name: 'Home' });
+    },
+
+    onError: () => {
+      toast.error(
+        'An issue occurred while performing this action, please try again or contact support.',
+      );
     },
   });
 }
