@@ -1,4 +1,4 @@
-import { mount, VueWrapper, MountingOptions } from '@vue/test-utils';
+import { mount, VueWrapper, type ComponentMountingOptions } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { VueQueryPlugin, QueryClient } from '@tanstack/vue-query';
 import type { Component } from 'vue';
@@ -29,7 +29,10 @@ export async function submitForm(wrapper: VueWrapper<Component>): Promise<void> 
 /**
  * Mount a component with Pinia and Vue Query plugins
  */
-export function mountWithPlugins<T extends Component>(component: T, options?: MountingOptions<T>) {
+export function mountWithPlugins<T extends Component>(
+  component: T,
+  options?: ComponentMountingOptions<T>,
+) {
   const pinia = createPinia();
   setActivePinia(pinia);
 
