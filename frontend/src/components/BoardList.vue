@@ -4,7 +4,7 @@ import BoardCard from './BoardCard.vue';
 import CardForm from '@/components/CardForm.vue';
 import CustomButton from '@/components/CustomButton.vue';
 import type { Card, List } from '@/types';
-import { useToggle } from '@/composables/useToggle';
+import { useToggle } from '@/composables';
 import { useCardStore } from '@/stores/card';
 import QuickCardEditorMenuOverlay from '@/components/QuickCardEditorMenuOverlay.vue';
 import { Plus } from 'lucide-vue-next';
