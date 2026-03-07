@@ -11,6 +11,12 @@ async function login(request: FormData): Promise<BackendResponse<AuthToken>> {
 async function logout(): Promise<BackendResponse<[]>> {
   return backendClient<[]>('/auth/logout', {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(localStorage.getItem('authToken') && {
+        Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+      }),
+    },
   });
 }
 
