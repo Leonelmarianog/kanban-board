@@ -11,6 +11,13 @@ vi.mock('vue-router', () => ({
   }),
 }));
 
+const mockToastError = vi.fn();
+vi.mock('vue-toastification', () => ({
+  useToast: () => ({
+    error: mockToastError,
+  }),
+}));
+
 describe('RegisterView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -69,7 +76,7 @@ describe('RegisterView', () => {
             message: 'Validation failed',
             status: 422,
             error: {
-              type: 'ValidationError',
+              type: 'ValidationException',
               message: 'Validation failed',
               code: 422,
               timestamp: new Date().toISOString(),
@@ -101,6 +108,76 @@ describe('RegisterView', () => {
 
     expect(mockPush).not.toHaveBeenCalled();
     expect(localStorage.getItem('authToken')).toBeNull();
+  });
+
+  it('should notify user when an unexpected error occurs during registration', async () => {
+    server.use(
+      http.post('*/api/auth/register', () => {
+        return HttpResponse.json(
+          {
+            success: false,
+            message: 'Internal server error',
+            status: 500,
+            error: {
+              type: 'InternalServerError',
+              message: 'Internal server error',
+              code: 500,
+              timestamp: new Date().toISOString(),
+            },
+          },
+          { status: 500 },
+        );
+      }),
+    );
+
+    const wrapper = mountWithPlugins(RegisterView);
+
+    await fillForm(wrapper, {
+      first_name: 'John',
+      last_name: 'Doe',
+      email: 'john@example.com',
+      password: 'password123',
+      password_confirmation: 'password123',
+    });
+
+    await submitForm(wrapper);
+
+    await vi.waitFor(() => {
+      expect(mockToastError).toHaveBeenCalledWith(
+        'An issue occurred while performing this action, please try again or contact support.',
+      );
+    });
+
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(localStorage.getItem('authToken')).toBeNull();
+  });
+
+  it('should notify user on network error', async () => {
+    server.use(
+      http.post('*/api/auth/register', () => {
+        return new Response(null, { status: 500 });
+      }),
+    );
+
+    const wrapper = mountWithPlugins(RegisterView);
+
+    await fillForm(wrapper, {
+      first_name: 'John',
+      last_name: 'Doe',
+      email: 'john@example.com',
+      password: 'password123',
+      password_confirmation: 'password123',
+    });
+
+    await submitForm(wrapper);
+
+    await vi.waitFor(() => {
+      expect(mockToastError).toHaveBeenCalledWith(
+        'An issue occurred while performing this action, please try again or contact support.',
+      );
+    });
+
+    expect(mockPush).not.toHaveBeenCalled();
   });
 
   it('should show loading spinner during registration', async () => {

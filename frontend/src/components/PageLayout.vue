@@ -2,14 +2,23 @@
 import { useRouter } from 'vue-router';
 import { useLogout } from '@/composables/mutations/useLogout';
 import { useAuthStore } from '@/stores/auth';
+import { useToast } from 'vue-toastification';
 
 const router = useRouter();
 const authStore = useAuthStore();
 const { logout, isLoading } = useLogout();
+const toast = useToast();
 
 function logoutAndRedirect() {
   logout(undefined, {
-    onSuccess: () => {
+    onSuccess: (result) => {
+      if (!result.success) {
+        toast.error(
+          'An issue occurred while performing this action, please try again or contact support.',
+        );
+        return;
+      }
+
       authStore.clearAuth();
       router.push({ name: 'Login' });
     },

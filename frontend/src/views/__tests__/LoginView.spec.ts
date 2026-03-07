@@ -11,6 +11,13 @@ vi.mock('vue-router', () => ({
   }),
 }));
 
+const mockToastError = vi.fn();
+vi.mock('vue-toastification', () => ({
+  useToast: () => ({
+    error: mockToastError,
+  }),
+}));
+
 describe('LoginView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -63,7 +70,7 @@ describe('LoginView', () => {
             message: 'Validation failed',
             status: 422,
             error: {
-              type: 'ValidationError',
+              type: 'ValidationException',
               message: 'Validation failed',
               code: 422,
               timestamp: new Date().toISOString(),
@@ -92,6 +99,107 @@ describe('LoginView', () => {
 
     expect(mockPush).not.toHaveBeenCalled();
     expect(localStorage.getItem('authToken')).toBeNull();
+  });
+
+  it('should notify user when authentication fails', async () => {
+    server.use(
+      http.post('*/api/auth/login', () => {
+        return HttpResponse.json(
+          {
+            success: false,
+            message: 'Authentication failed',
+            status: 401,
+            error: {
+              type: 'AuthenticationFailedException',
+              message: 'Authentication failed',
+              code: 401,
+              timestamp: new Date().toISOString(),
+            },
+          },
+          { status: 401 },
+        );
+      }),
+    );
+
+    const wrapper = mountWithPlugins(LoginView);
+
+    await fillForm(wrapper, {
+      email: 'test@example.com',
+      password: 'wrongpassword',
+    });
+
+    await submitForm(wrapper);
+
+    await vi.waitFor(() => {
+      expect(mockToastError).toHaveBeenCalledWith('Username or password incorrect.');
+    });
+
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(localStorage.getItem('authToken')).toBeNull();
+  });
+
+  it('should notify user when an unexpected error occurs during login', async () => {
+    server.use(
+      http.post('*/api/auth/login', () => {
+        return HttpResponse.json(
+          {
+            success: false,
+            message: 'Internal server error',
+            status: 500,
+            error: {
+              type: 'InternalServerError',
+              message: 'Internal server error',
+              code: 500,
+              timestamp: new Date().toISOString(),
+            },
+          },
+          { status: 500 },
+        );
+      }),
+    );
+
+    const wrapper = mountWithPlugins(LoginView);
+
+    await fillForm(wrapper, {
+      email: 'test@example.com',
+      password: 'password123',
+    });
+
+    await submitForm(wrapper);
+
+    await vi.waitFor(() => {
+      expect(mockToastError).toHaveBeenCalledWith(
+        'An issue occurred while performing this action, please try again or contact support.',
+      );
+    });
+
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(localStorage.getItem('authToken')).toBeNull();
+  });
+
+  it('should notify user on network error', async () => {
+    server.use(
+      http.post('*/api/auth/login', () => {
+        return new Response(null, { status: 500 });
+      }),
+    );
+
+    const wrapper = mountWithPlugins(LoginView);
+
+    await fillForm(wrapper, {
+      email: 'test@example.com',
+      password: 'password123',
+    });
+
+    await submitForm(wrapper);
+
+    await vi.waitFor(() => {
+      expect(mockToastError).toHaveBeenCalledWith(
+        'An issue occurred while performing this action, please try again or contact support.',
+      );
+    });
+
+    expect(mockPush).not.toHaveBeenCalled();
   });
 
   it('should show loading spinner during login', async () => {

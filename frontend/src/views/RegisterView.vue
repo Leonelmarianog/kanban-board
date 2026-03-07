@@ -5,22 +5,37 @@ import { useValidationErrors } from '@/composables/shared/useValidationErrors';
 import { useAuthStore } from '@/stores/auth';
 import RegisterForm from '@/components/RegisterForm.vue';
 import type { RegisterFormData } from '@/forms/RegisterFormData';
+import { useToast } from 'vue-toastification';
 
 const router = useRouter();
 const authStore = useAuthStore();
 const { register, isLoading } = useRegister();
 const { errors: validationErrors, setErrors } = useValidationErrors();
+const toast = useToast();
 
 function registerAndRedirect(formData: RegisterFormData) {
   register(formData, {
     onSuccess: (result) => {
       if (!result.success) {
-        setErrors(result.error.validation_errors);
+        if (result.error.type === 'ValidationException') {
+          setErrors(result.error.validation_errors);
+          return;
+        }
+
+        toast.error(
+          'An issue occurred while performing this action, please try again or contact support.',
+        );
         return;
       }
 
       authStore.setAuth(result.data.token);
       router.push({ name: 'Home' });
+    },
+
+    onError: () => {
+      toast.error(
+        'An issue occurred while performing this action, please try again or contact support.',
+      );
     },
   });
 }

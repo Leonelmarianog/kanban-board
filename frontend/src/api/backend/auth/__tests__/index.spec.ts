@@ -8,6 +8,7 @@ vi.mock('@/api/backend/client');
 describe('authApi', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
   });
 
   afterEach(() => {
@@ -58,6 +59,48 @@ describe('authApi', () => {
         message: 'Logout successful',
         status: 200,
         data: [],
+      });
+    });
+
+    it('should include bearer token as request header if it exists', async () => {
+      const mockResponse: BackendResponse<[]> = {
+        success: true,
+        message: 'Logout successful',
+        status: 200,
+        data: [],
+      };
+
+      vi.mocked(backendClient).mockResolvedValue(mockResponse);
+      localStorage.setItem('authToken', 'my-auth-token');
+
+      await authApi.logout();
+
+      expect(backendClient).toHaveBeenCalledWith('/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer my-auth-token',
+        },
+      });
+    });
+
+    it('should not include bearer token as request header if it does not exist', async () => {
+      const mockResponse: BackendResponse<[]> = {
+        success: true,
+        message: 'Logout successful',
+        status: 200,
+        data: [],
+      };
+
+      vi.mocked(backendClient).mockResolvedValue(mockResponse);
+
+      await authApi.logout();
+
+      expect(backendClient).toHaveBeenCalledWith('/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
     });
   });

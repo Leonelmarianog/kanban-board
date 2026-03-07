@@ -1,13 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import PageLayout from '../PageLayout.vue';
 import { server } from '@/../test/setup';
-import { http } from 'msw';
+import { http, HttpResponse } from 'msw';
 import { mountWithPlugins } from '@/../test/helpers';
 
 const mockPush = vi.fn();
 vi.mock('vue-router', () => ({
   useRouter: () => ({
     push: mockPush,
+  }),
+}));
+
+const mockToast = vi.fn();
+vi.mock('vue-toastification', () => ({
+  useToast: () => ({
+    error: mockToast,
   }),
 }));
 
@@ -83,5 +90,53 @@ describe('PageLayout', () => {
     });
 
     resolveLogout!();
+  });
+
+  it('should cancel logout if request fails', async () => {
+    localStorage.setItem('authToken', 'test-token');
+
+    server.use(
+      http.post('*/api/auth/logout', () => {
+        return HttpResponse.json(
+          { success: false, error: { message: 'Logout failed' } },
+          { status: 500 },
+        );
+      }),
+    );
+
+    const wrapper = mountWithPlugins(PageLayout);
+
+    const logoutButton = wrapper.find('button');
+    await logoutButton.trigger('click');
+
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(localStorage.getItem('authToken')).toBe('test-token');
+  });
+
+  it('should notify user when logout fails', async () => {
+    localStorage.setItem('authToken', 'test-token');
+
+    server.use(
+      http.post('*/api/auth/logout', () => {
+        return HttpResponse.json(
+          { success: false, error: { message: 'Logout failed' } },
+          { status: 500 },
+        );
+      }),
+    );
+
+    const wrapper = mountWithPlugins(PageLayout);
+
+    const logoutButton = wrapper.find('button');
+    await logoutButton.trigger('click');
+
+    await vi.waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(
+        'An issue occurred while performing this action, please try again or contact support.',
+      );
+    });
+
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(localStorage.getItem('authToken')).toBe('test-token');
   });
 });
