@@ -1,21 +1,18 @@
 <script setup lang="ts">
-import { watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { computed } from 'vue';
+import { LoaderCircle } from 'lucide-vue-next';
 import { useMeQuery } from '@/composables';
 import { useAuthStore } from '@/stores/auth';
 
-const router = useRouter();
 const authStore = useAuthStore();
-const { isError } = useMeQuery();
+const { isPending } = useMeQuery();
 
-watch(isError, (hasError) => {
-  if (hasError && authStore.isAuthenticated) {
-    authStore.clearAuth();
-    router.push({ name: 'Login' });
-  }
-});
+const isInitialLoad = computed(() => authStore.isAuthenticated && isPending.value);
 </script>
 
 <template>
-  <RouterView />
+  <div v-if="isInitialLoad" class="h-screen flex items-center justify-center">
+    <LoaderCircle class="animate-spin h-8 w-8 text-blue-500" />
+  </div>
+  <RouterView v-else />
 </template>

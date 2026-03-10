@@ -1,17 +1,18 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { backendClient } from '../client';
-import { ApiError } from '@/api/ApiError';
+import { ApiError } from '@/api/backend/ApiError.ts';
+import type { BackendErrorResponse } from '@/api/backend/types.ts';
 
 describe('backendClient', () => {
   beforeEach(() => {
-    vi.spyOn(global, 'fetch');
+    vi.spyOn(global, 'fetch'); // Enable assertion on fetch.
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it('should return a successful response when response is ok', async () => {
+  it('should return data on successful response', async () => {
     const mockData = { id: '1', name: 'Test User' };
     const mockResponse = {
       success: true,
@@ -27,77 +28,50 @@ describe('backendClient', () => {
 
     const result = await backendClient<{ id: string; name: string }>('/users/1');
 
-    expect(result).toEqual({
-      success: true,
-      message: 'Request successful',
-      status: 200,
-      data: mockData,
-    });
+    expect(result).toEqual(mockData);
   });
 
-  it('should return an unsuccessful response when response is not ok', async () => {
-    const mockError = {
-      type: 'NotFoundError',
-      message: 'User not found',
-      code: 404,
-      timestamp: '2024-01-01T00:00:00Z',
-    };
+  it('should throw ApiError for network errors', async () => {
+    vi.mocked(fetch).mockRejectedValue(new TypeError('Network error'));
+
+    const error = (await backendClient('/users').catch((e) => e)) as ApiError;
+
+    expect(error).toBeInstanceOf(ApiError);
+  });
+
+  it('should throw ApiError for JSON parsing errors', async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.reject(new SyntaxError('Unexpected token')),
+    } as Response);
+
+    const error = (await backendClient('/users').catch((e) => e)) as ApiError;
+
+    expect(error).toBeInstanceOf(ApiError);
+  });
+
+  it('should throw ApiError on unsuccessful response', async () => {
     const mockResponse = {
       success: false,
       message: 'Request failed',
-      status: 404,
-      error: mockError,
-    };
+      status: 401,
+      error: {
+        type: 'AuthenticationException',
+        message: 'Invalid token',
+        code: 0,
+        timestamp: '2024-01-01T00:00:00Z',
+      },
+    } as BackendErrorResponse;
 
     vi.mocked(fetch).mockResolvedValue({
       ok: false,
+      status: 401,
       json: () => Promise.resolve(mockResponse),
     } as Response);
 
-    const result = await backendClient('/users/999');
+    const error = (await backendClient('/user/1').catch((e) => e)) as ApiError;
 
-    expect(result).toEqual({
-      success: false,
-      message: 'Request failed',
-      status: 404,
-      error: mockError,
-    });
-  });
-
-  it('should throw an ApiError when there is a network error', async () => {
-    vi.mocked(fetch).mockRejectedValue(new TypeError('Network Error'));
-
-    await expect(backendClient('/users/1')).rejects.toThrow(ApiError);
-
-    try {
-      await backendClient('/users/1');
-    } catch (error) {
-      // eslint-disable-next-line
-      expect(error).toBeInstanceOf(ApiError);
-      // eslint-disable-next-line
-      expect(error).toHaveProperty('message', 'An unexpected error occurred.');
-      // eslint-disable-next-line
-      expect(error).toHaveProperty('data');
-    }
-  });
-
-  it('should throw an ApiError when there is a JSON parsing error', async () => {
-    vi.mocked(fetch).mockResolvedValue({
-      ok: true,
-      json: () => Promise.reject(new SyntaxError('Unexpected token in JSON')),
-    } as Response);
-
-    await expect(backendClient('/users/1')).rejects.toThrow(ApiError);
-
-    try {
-      await backendClient('/users/1');
-    } catch (error) {
-      // eslint-disable-next-line
-      expect(error).toBeInstanceOf(ApiError);
-      // eslint-disable-next-line
-      expect(error).toHaveProperty('message', 'An unexpected error occurred.');
-      // eslint-disable-next-line
-      expect(error).toHaveProperty('data');
-    }
+    expect(error).toBeInstanceOf(ApiError);
   });
 });

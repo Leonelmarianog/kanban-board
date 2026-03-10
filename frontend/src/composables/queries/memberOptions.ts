@@ -9,15 +9,7 @@ export const memberOptions = {
   me: () =>
     queryOptions({
       queryKey: memberKeys.me(),
-      queryFn: async () => {
-        const result = await memberApi.getMe();
-
-        if (!result.success) {
-          throw new Error(result.error.message);
-        }
-
-        return result.data;
-      },
+      queryFn: () => memberApi.getMe(),
       staleTime: 5 * 60 * 1000,
     }),
 };

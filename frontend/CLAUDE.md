@@ -58,17 +58,90 @@ test/
 #### API Layer
 
 - `backendClient(path, options)` - Thin wrapper around fetch with `VITE_API_BASE_URL` prefix
-- Returns `BackendResponse<T>` - a discriminated union of success/error types
-- Handles JSON parsing and error wrapping with `ApiError`
+- Returns `Promise<T>` on success, throws `ApiError` on failure
+- All API functions return the data directly, not wrapped in a result object
 
 ```typescript
-// Example usage
-const result = await backendClient<AuthToken>('/auth/login', { method: 'POST', body: formData });
-if (result.success) {
-  // result.data is typed as AuthToken
-} else {
-  // result.error contains error details
+// Example usage - throws on error
+const data = await backendClient<AuthToken>('/auth/login', { method: 'POST', body: formData });
+// data is typed as AuthToken
+
+// Error handling is done via try/catch or TanStack Query's onError
+```
+
+#### Error Handling
+
+The app uses a three-tier error handling strategy for TanStack Query:
+
+1. **Global QueryCache.onError** - Handles authentication errors (missing/invalid token)
+2. **Local mutation.onError** - Handles form validation errors and specific error types
+3. **Query isPending/error states** - For loading and error UI in components
+
+**ApiError Class:**
+
+```typescript
+// src/api/ApiError.ts
+export enum ApiErrorType {
+  AuthenticationException = 'AuthenticationException', // Missing/invalid token
+  AuthenticationFailedException = 'AuthenticationFailedException', // Wrong credentials
+  ValidationException = 'ValidationException', // Form validation errors
 }
+
+export class ApiError extends Error {
+  readonly type: ApiErrorType;
+  readonly code: number;
+  readonly status: number;
+  readonly validationErrors?: Record<string, string[]>;
+
+  static create(response: BackendErrorResponse): ApiError;
+}
+```
+
+**Global Auth Error Handler (main.ts):**
+
+```typescript
+const queryClient = new QueryClient({
+  queryCache: new QueryCache({
+    onError: (error) => {
+      if (error instanceof ApiError && error.type === ApiErrorType.AuthenticationException) {
+        authStore.clearAuth();
+        router.push({ name: 'Login' });
+        toast.error('Your session has expired. Please log in again.');
+      }
+    },
+  }),
+});
+```
+
+**Local Error Handling in Mutations:**
+
+```typescript
+// In mutation composable - just return the API promise
+export function useLogin() {
+  return useMutation({
+    mutationFn: (data: LoginFormData) => authApi.login(data.toFormData()),
+  });
+}
+
+// In component - handle specific error types
+login(formData, {
+  onSuccess: (data) => {
+    authStore.setAuth(data.token);
+    router.push({ name: 'Home' });
+  },
+  onError: (error) => {
+    if (error instanceof ApiError && error.type === ApiErrorType.ValidationException) {
+      setErrors(error.validationErrors); // Show validation errors in form
+    } else if (
+      error instanceof ApiError &&
+      error.type === ApiErrorType.AuthenticationFailedException
+    ) {
+      toast.error('Username or password incorrect.');
+    } else {
+      toast.error('An unexpected error occurred.');
+    }
+  },
+});
 ```
 
 #### Query Keys (TanStack Query)
@@ -111,10 +184,11 @@ const { data } = useQuery(memberOptions.me());
 #### Mutations
 
 - Logic callbacks (cache updates, invalidation) go in `useMutation` options
-- UI callbacks (redirects, toasts) go in `mutate` call options
+- UI callbacks (redirects, toasts, validation errors) go in `mutate` call's `onError`/`onSuccess` options
+- Return simple wrapper around `useMutation`, letting the API layer throw errors
 
 ```typescript
-// useMutation - for logic/cache
+// useMutation composable - minimal, just wraps API function
 export function useLogout() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -125,11 +199,15 @@ export function useLogout() {
   });
 }
 
-// In component - for UI side effects
+// In component - handle success and specific error types
 logout(undefined, {
   onSuccess: () => {
     authStore.clearAuth();
     router.push({ name: 'Login' });
+  },
+  onError: (error) => {
+    // Handle specific error types locally
+    toast.error('Logout failed. Please try again.');
   },
 });
 ```

@@ -11,16 +11,15 @@ const toast = useToast();
 
 function logoutAndRedirect() {
   logout(undefined, {
-    onSuccess: (result) => {
-      if (!result.success) {
-        toast.error(
-          'An issue occurred while performing this action, please try again or contact support.',
-        );
-        return;
-      }
-
+    onSuccess: () => {
       authStore.clearAuth();
       router.push({ name: 'Login' });
+    },
+
+    onError: () => {
+      toast.error(
+        'An issue occurred while performing this action, please try again or contact support.',
+      );
     },
   });
 }
