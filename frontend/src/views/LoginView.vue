@@ -14,7 +14,7 @@ const { login, isLoading } = useLogin();
 const { errors: validationErrors, setErrors } = useValidationErrors();
 const toast = useToast();
 
-function loginAndRedirect(formData: LoginFormData) {
+function handleLogin(formData: LoginFormData) {
   login(formData, {
     onSuccess: (data) => {
       authStore.setAuth(data.token);
@@ -45,7 +45,7 @@ function loginAndRedirect(formData: LoginFormData) {
     <main class="h-full">
       <div class="h-full flex justify-center items-center">
         <div class="w-[25em]">
-          <LoginForm :isLoading="isLoading" :errors="validationErrors" @save="loginAndRedirect" />
+          <LoginForm :isLoading="isLoading" :errors="validationErrors" @save="handleLogin" />
         </div>
       </div>
     </main>

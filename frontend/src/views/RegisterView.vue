@@ -14,7 +14,7 @@ const { register, isLoading } = useRegister();
 const { errors: validationErrors, setErrors } = useValidationErrors();
 const toast = useToast();
 
-function registerAndRedirect(formData: RegisterFormData) {
+function handleRegistration(formData: RegisterFormData) {
   register(formData, {
     onSuccess: (data) => {
       authStore.setAuth(data.token);
@@ -43,7 +43,7 @@ function registerAndRedirect(formData: RegisterFormData) {
           <RegisterForm
             :isLoading="isLoading"
             :errors="validationErrors"
-            @save="registerAndRedirect"
+            @save="handleRegistration"
           />
         </div>
       </div>

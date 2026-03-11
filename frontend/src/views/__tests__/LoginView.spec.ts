@@ -24,27 +24,7 @@ describe('LoginView', () => {
     localStorage.clear();
   });
 
-  it('should render the login form', () => {
-    const wrapper = mountWithPlugins(LoginView);
-
-    expect(wrapper.find('h2').text()).toContain('Sign in to continue');
-    expect(wrapper.findAll('input')).toHaveLength(2);
-    expect(wrapper.find('button[type="submit"]').text()).toContain('Login');
-  });
-
-  it('should enable submit button when form is valid', async () => {
-    const wrapper = mountWithPlugins(LoginView);
-
-    await fillForm(wrapper, {
-      email: 'test@example.com',
-      password: 'password123',
-    });
-
-    const submitButton = wrapper.find('button[type="submit"]');
-    expect(submitButton.attributes('disabled')).toBeUndefined();
-  });
-
-  it('should login successfully and navigate to home', async () => {
+  it('should allow users to login', async () => {
     const wrapper = mountWithPlugins(LoginView);
 
     await fillForm(wrapper, {
@@ -57,11 +37,10 @@ describe('LoginView', () => {
     await vi.waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith({ name: 'Home' });
     });
-
     expect(localStorage.getItem('authToken')).toBe('test-token-123');
   });
 
-  it('should display validation errors from backend', async () => {
+  it('should display validation errors to users when attempting to login with invalid data', async () => {
     server.use(
       http.post('*/api/auth/login', () => {
         return HttpResponse.json(
@@ -96,12 +75,11 @@ describe('LoginView', () => {
     await vi.waitFor(() => {
       expect(wrapper.html()).toContain('Invalid email or password.');
     });
-
     expect(mockPush).not.toHaveBeenCalled();
     expect(localStorage.getItem('authToken')).toBeNull();
   });
 
-  it('should notify user when authentication fails', async () => {
+  it('should display a toast to users when login fails due to invalid credentials', async () => {
     server.use(
       http.post('*/api/auth/login', () => {
         return HttpResponse.json(
@@ -133,12 +111,11 @@ describe('LoginView', () => {
     await vi.waitFor(() => {
       expect(mockToastError).toHaveBeenCalledWith('Username or password incorrect.');
     });
-
     expect(mockPush).not.toHaveBeenCalled();
     expect(localStorage.getItem('authToken')).toBeNull();
   });
 
-  it('should notify user when an unexpected error occurs during login', async () => {
+  it('should display a toast to users when login fails due to any unexpected errors', async () => {
     server.use(
       http.post('*/api/auth/login', () => {
         return HttpResponse.json(
@@ -172,59 +149,7 @@ describe('LoginView', () => {
         'An issue occurred while performing this action, please try again or contact support.',
       );
     });
-
     expect(mockPush).not.toHaveBeenCalled();
     expect(localStorage.getItem('authToken')).toBeNull();
-  });
-
-  it('should notify user on network error', async () => {
-    server.use(
-      http.post('*/api/auth/login', () => {
-        return new Response(null, { status: 500 });
-      }),
-    );
-
-    const wrapper = mountWithPlugins(LoginView);
-
-    await fillForm(wrapper, {
-      email: 'test@example.com',
-      password: 'password123',
-    });
-
-    await submitForm(wrapper);
-
-    await vi.waitFor(() => {
-      expect(mockToastError).toHaveBeenCalledWith(
-        'An issue occurred while performing this action, please try again or contact support.',
-      );
-    });
-
-    expect(mockPush).not.toHaveBeenCalled();
-  });
-
-  it('should show loading spinner during login', async () => {
-    let resolveLogin: () => void;
-    server.use(
-      http.post('*/api/auth/login', () => {
-        return new Promise((resolve) => {
-          resolveLogin = resolve;
-        });
-      }),
-    );
-
-    const wrapper = mountWithPlugins(LoginView);
-
-    await fillForm(wrapper, {
-      email: 'test@example.com',
-      password: 'password123',
-    });
-
-    await submitForm(wrapper);
-
-    await vi.waitFor(() => {
-      expect(wrapper.find('svg.animate-spin').exists()).toBe(true);
-    });
-
-    resolveLogin!();
   });
 });

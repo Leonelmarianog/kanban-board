@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '@/views/HomeView.vue';
 import RegisterView from '@/views/RegisterView.vue';
 import LoginView from '@/views/LoginView.vue';
-import { useAuthStore } from '@/stores/auth';
+import { routerBeforeEach } from './guards';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -28,18 +28,6 @@ const router = createRouter({
   ],
 });
 
-router.beforeEach((to) => {
-  const authStore = useAuthStore();
-
-  // Redirect authenticated users away from guest-only routes.
-  if (to.meta.requiresGuest && authStore.isAuthenticated) {
-    return { name: 'Home' };
-  }
-
-  // Redirect unauthenticated users away from protected routes.
-  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    return { name: 'Login' };
-  }
-});
+router.beforeEach(routerBeforeEach);
 
 export default router;
