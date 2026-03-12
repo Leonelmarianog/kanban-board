@@ -5,12 +5,6 @@ import PageLayout from '@/components/PageLayout.vue';
 
 <template>
   <PageLayout>
-    <template #heading>
-      <h1 class="font-bold text-3xl text-center">My board</h1>
-    </template>
-
-    <template #default>
-      <BoardContainer />
-    </template>
+    <BoardContainer />
   </PageLayout>
 </template>

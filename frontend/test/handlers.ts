@@ -45,7 +45,7 @@ export const handlers = [
       success: true,
       message: 'Member retrieved successfully',
       status: 200,
-      data: testUser,
+      data: [testUser],
     });
   }),
 ];
