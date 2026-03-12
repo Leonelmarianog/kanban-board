@@ -9,7 +9,10 @@ export const memberOptions = {
   me: () =>
     queryOptions({
       queryKey: memberKeys.me(),
-      queryFn: () => memberApi.getMe(),
+      queryFn: async () => {
+        const members = await memberApi.getMe();
+        return members[0];
+      },
       staleTime: 5 * 60 * 1000,
     }),
 };
