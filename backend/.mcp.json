@@ -1,0 +1,12 @@
+{
+    "mcpServers": {
+        "laravel-boost": {
+            "command": "wsl.exe",
+            "args": [
+                "/usr/bin/php8.5",
+                "/home/leonel/personal/projects/vue-playground/backend/artisan",
+                "boost:mcp"
+            ]
+        }
+    }
+}
