@@ -9,6 +9,9 @@ use Modules\Application\UseCases\Auth\LogoutUser\LogoutUserHandler;
 use Modules\Application\UseCases\Auth\LogoutUser\LogoutUserRepositoryInterface;
 use Modules\Application\UseCases\Auth\RegisterUser\RegisterUserHandler;
 use Modules\Application\UseCases\Auth\RegisterUser\RegisterUserRepositoryInterface;
+use Modules\Application\UseCases\Member\GetMember\GetMemberHandler;
+use Modules\Application\UseCases\Member\GetMember\GetMemberRepositoryInterface;
+use Modules\Infrastructure\Persistence\Repositories\GetMemberRepository;
 use Modules\Infrastructure\Persistence\Repositories\LoginUserRepository;
 use Modules\Infrastructure\Persistence\Repositories\LogoutUserRepository;
 use Modules\Infrastructure\Persistence\Repositories\RegisterUserRepository;
@@ -33,6 +36,11 @@ final class RepositoryServiceProvider extends ServiceProvider
             LogoutUserRepository::class
         );
 
+        $this->app->bind(
+            GetMemberRepositoryInterface::class,
+            GetMemberRepository::class
+        );
+
         // Bind use case handlers
         $this->app->bind(RegisterUserHandler::class, function ($app) {
             return new RegisterUserHandler(
@@ -49,6 +57,17 @@ final class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(LogoutUserHandler::class, function ($app) {
             return new LogoutUserHandler(
                 $app->make(LogoutUserRepositoryInterface::class),
+            );
+        });
+
+        $this->app->bind(
+            GetMemberRepositoryInterface::class,
+            GetMemberRepository::class
+        );
+
+        $this->app->bind(GetMemberHandler::class, function ($app) {
+            return new GetMemberHandler(
+                $app->make(GetMemberRepositoryInterface::class),
             );
         });
     }

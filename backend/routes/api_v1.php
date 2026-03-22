@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Modules\Auth\Infrastructure\Http\Controllers\MemberController;
+use Modules\Infrastructure\Http\Controllers\Member\GetMemberController;
 
 Route::prefix('v1')->group(function () {
     Route::get('/', function () {
@@ -10,6 +10,6 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware('auth:sanctum')->group(function () {
         // Members
-        Route::get('/members/me', [MemberController::class, 'me']);
+        Route::get('/members/me', GetMemberController::class);
     });
 });
