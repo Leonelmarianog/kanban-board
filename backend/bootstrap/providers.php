@@ -2,5 +2,5 @@
 
 return [
     App\Providers\AppServiceProvider::class,
-    Modules\Auth\Infrastructure\Providers\AuthServiceProvider::class,
+    Modules\Infrastructure\Providers\RepositoryServiceProvider::class,
 ];

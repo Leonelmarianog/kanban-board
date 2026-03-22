@@ -1,15 +1,15 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Modules\Auth\Infrastructure\Http\Controllers\AuthController;
+use Modules\Infrastructure\Http\Controllers\Auth\LoginUserController;
+use Modules\Infrastructure\Http\Controllers\Auth\LogoutUserController;
+use Modules\Infrastructure\Http\Controllers\Auth\RegisterUserController;
 
 /* Base API routes that don't need versioning like login and register go here. */
 
-Route::prefix('auth')->group(function () {
-    Route::post('register', [AuthController::class, 'register']);
-    Route::post('login', [AuthController::class, 'login']);
+Route::post('auth/register', RegisterUserController::class);
+Route::post('auth/login', LoginUserController::class);
 
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::post('logout', [AuthController::class, 'logout']);
-    });
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('auth/logout', LogoutUserController::class);
 });
