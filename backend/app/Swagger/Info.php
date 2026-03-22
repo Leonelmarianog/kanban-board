@@ -20,7 +20,7 @@ use OpenApi\Attributes as OA;
     ],
     components: new OA\Components(
         responses: [
-            'Unauthorized' => new OA\Response(
+            new OA\Response(
                 response: 401,
                 description: 'Unauthorized - Authentication token is missing or invalid',
                 content: new OA\JsonContent(
@@ -30,7 +30,7 @@ use OpenApi\Attributes as OA;
                     ]
                 )
             ),
-            'Forbidden' => new OA\Response(
+            new OA\Response(
                 response: 403,
                 description: 'Forbidden - Insufficient permissions',
                 content: new OA\JsonContent(
@@ -40,7 +40,7 @@ use OpenApi\Attributes as OA;
                     ]
                 )
             ),
-            'NotFound' => new OA\Response(
+            new OA\Response(
                 response: 404,
                 description: 'Not Found - Resource does not exist',
                 content: new OA\JsonContent(
@@ -50,7 +50,7 @@ use OpenApi\Attributes as OA;
                     ]
                 )
             ),
-            'ServerError' => new OA\Response(
+            new OA\Response(
                 response: 500,
                 description: 'Internal Server Error - Unexpected error occurred',
                 content: new OA\JsonContent(

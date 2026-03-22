@@ -8,6 +8,7 @@ use Modules\Application\UseCases\Member\GetMember\Exceptions\MemberNotFoundExcep
 use Modules\Application\UseCases\Member\GetMember\GetMemberHandler;
 use Modules\Application\UseCases\Member\GetMember\GetMemberRequestDto;
 use Modules\Infrastructure\Http\Controllers\BaseController;
+use Modules\Infrastructure\Persistence\Models\UserModel;
 use OpenApi\Attributes as OA;
 
 #[OA\Tag(
@@ -75,6 +76,7 @@ final class GetMemberController extends BaseController
     )]
     public function __invoke(Request $request): JsonResponse
     {
+        /** @var UserModel|null $user */
         $user = $request->user();
 
         if ($user === null) {

@@ -4,9 +4,11 @@ namespace Modules\Infrastructure\Http\Controllers\Auth;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Laravel\Sanctum\PersonalAccessToken;
 use Modules\Application\UseCases\Auth\LogoutUser\Exceptions\LogoutUserException;
 use Modules\Application\UseCases\Auth\LogoutUser\LogoutUserHandler;
 use Modules\Infrastructure\Http\Controllers\BaseController;
+use Modules\Infrastructure\Persistence\Models\UserModel;
 use OpenApi\Attributes as OA;
 
 #[OA\Tag(
@@ -61,6 +63,7 @@ final class LogoutUserController extends BaseController
     public function __invoke(Request $request): JsonResponse
     {
         try {
+            /** @var UserModel|null $user */
             $user = $request->user();
 
             if ($user === null) {
@@ -70,6 +73,7 @@ final class LogoutUserController extends BaseController
                 );
             }
 
+            /** @var PersonalAccessToken|null $token */
             $token = $user->currentAccessToken();
 
             if ($token === null) {
