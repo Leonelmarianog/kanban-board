@@ -222,6 +222,119 @@ HTTP Request → Controller (catches, maps to HTTP) → Handler → Domain
 
 ---
 
+## Repository Error Handling Pattern
+
+### Critical Rule: Repositories Do NOT Throw Exceptions
+
+**Infrastructure layer (repositories, external services) must NEVER throw exceptions.** Instead, they return values that allow the Application layer to decide how to proceed.
+
+### Why?
+
+- **Application layer owns business logic decisions** - including error handling
+- **Infrastructure is an implementation detail** - it should not dictate control flow
+- **Testability** - easier to mock repositories that return values vs throw exceptions
+- **Clean Architecture principle** - infrastructure should be a dumb data access layer
+
+### Pattern: Return `null` for "Not Found"
+
+```php
+// ❌ WRONG - Repository throws exception
+interface GetMemberRepositoryInterface
+{
+    public function findByIdOrFail(string $id): User;  // BAD
+}
+
+final class GetMemberRepository implements GetMemberRepositoryInterface
+{
+    public function findByIdOrFail(string $id): User
+    {
+        $model = UserModel::find($id);
+
+        if ($model === null) {
+            throw new MemberNotFoundException($id);  // WRONG - infra throwing!
+        }
+
+        return UserMapper::toDomain($model);
+    }
+}
+
+// ✅ CORRECT - Repository returns null, Handler throws exception
+interface GetMemberRepositoryInterface
+{
+    public function findById(string $id): ?User;  // Returns null if not found
+}
+
+final class GetMemberRepository implements GetMemberRepositoryInterface
+{
+    public function findById(string $id): ?User
+    {
+        $model = UserModel::find($id);
+
+        if ($model === null) {
+            return null;  // Return null, let Application layer decide
+        }
+
+        return UserMapper::toDomain($model);
+    }
+}
+
+// Handler throws the exception
+final readonly class GetMemberHandler
+{
+    public function execute(GetMemberRequestDto $request): GetMemberResponseDto
+    {
+        $user = $this->repository->findById($request->memberId);
+
+        if ($user === null) {
+            throw new MemberNotFoundException($request->memberId);  // Application layer throws
+        }
+
+        return $this->toResponseDto($user);
+    }
+}
+```
+
+### When to Use Each Approach
+
+| Scenario | Repository Returns | Handler Throws |
+|----------|---------------------|----------------|
+| Entity not found | `null` | `EntityNotFoundException` |
+| Validation needed | Entity (valid) | `ValidationException` if invalid |
+| External service failure | `null` or error DTO | Handler decides: retry, fail, etc. |
+
+### Method Naming Convention
+
+| Method | Returns | Behavior |
+|--------|---------|----------|
+| `findById()` | `?User` | Returns `null` if not found |
+| `findByEmail()` | `?User` | Returns `null` if not found |
+| `emailExists()` | `bool` | Returns `true`/`false` |
+| `save()` | `User` | Always returns the saved entity |
+| `createToken()` | `?string` | Returns `null` if creation fails |
+
+### Controller Layer Responsibility
+
+Controllers catch exceptions thrown by Handlers and map them to HTTP responses:
+
+```php
+final class GetMemberController extends BaseController
+{
+    public function __invoke(Request $request): JsonResponse
+    {
+        try {
+            $response = $this->handler->execute($requestDto);
+            return $this->success(...);
+        } catch (MemberNotFoundException $e) {
+            return $this->error(statusCode: 404, message: $e->getMessage());
+        } catch (ApplicationException $e) {
+            return $this->error(statusCode: 500, message: $e->getMessage());
+        }
+    }
+}
+```
+
+---
+
 ## Models (Eloquent)
 
 ### Structure
