@@ -108,4 +108,16 @@ final class User
     {
         return $this->deletedAt;
     }
+
+    public function updateProfileDetails(
+        string $firstName,
+        string $lastName,
+        string $username,
+        ?string $bio,
+    ): void {
+        $this->firstName = new UserFullName($firstName);
+        $this->lastName = new UserFullName($lastName);
+        $this->username = new Username($username);
+        $this->bio = $bio;
+    }
 }
