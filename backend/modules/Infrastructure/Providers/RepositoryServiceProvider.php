@@ -11,10 +11,13 @@ use Modules\Application\UseCases\Auth\RegisterUser\RegisterUserHandler;
 use Modules\Application\UseCases\Auth\RegisterUser\RegisterUserRepositoryInterface;
 use Modules\Application\UseCases\Member\GetMember\GetMemberHandler;
 use Modules\Application\UseCases\Member\GetMember\GetMemberRepositoryInterface;
+use Modules\Application\UseCases\Member\UpdateProfileDetails\UpdateProfileDetailsHandler;
+use Modules\Application\UseCases\Member\UpdateProfileDetails\UpdateProfileDetailsRepositoryInterface;
 use Modules\Infrastructure\Persistence\Repositories\GetMemberRepository;
 use Modules\Infrastructure\Persistence\Repositories\LoginUserRepository;
 use Modules\Infrastructure\Persistence\Repositories\LogoutUserRepository;
 use Modules\Infrastructure\Persistence\Repositories\RegisterUserRepository;
+use Modules\Infrastructure\Persistence\Repositories\UpdateProfileDetailsRepository;
 
 final class RepositoryServiceProvider extends ServiceProvider
 {
@@ -65,9 +68,20 @@ final class RepositoryServiceProvider extends ServiceProvider
             GetMemberRepository::class
         );
 
+        $this->app->bind(
+            UpdateProfileDetailsRepositoryInterface::class,
+            UpdateProfileDetailsRepository::class
+        );
+
         $this->app->bind(GetMemberHandler::class, function ($app) {
             return new GetMemberHandler(
                 $app->make(GetMemberRepositoryInterface::class),
+            );
+        });
+
+        $this->app->bind(UpdateProfileDetailsHandler::class, function ($app) {
+            return new UpdateProfileDetailsHandler(
+                $app->make(UpdateProfileDetailsRepositoryInterface::class),
             );
         });
     }

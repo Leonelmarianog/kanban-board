@@ -93,4 +93,130 @@ describe('User Entity', function () {
                 ->and($user->getPassword()->verify('password123'))->toBeTrue();
         });
     });
+
+    describe('updateProfileDetails', function () {
+        it('updates profile details with all fields', function () {
+            $user = User::create(
+                id: '123e4567-e89b-12d3-a456-426614174000',
+                firstName: 'John',
+                lastName: 'Doe',
+                email: 'john@example.com',
+                password: HashedPassword::fromPlainText('password123'),
+                username: 'johndoe',
+                bio: 'Original bio',
+            );
+
+            $user->updateProfileDetails(
+                firstName: 'Jane',
+                lastName: 'Smith',
+                username: 'janesmith',
+                bio: 'New bio',
+            );
+
+            expect($user->getFirstName()->getValue())->toBe('Jane')
+                ->and($user->getLastName()->getValue())->toBe('Smith')
+                ->and($user->getUsername()->getValue())->toBe('janesmith')
+                ->and($user->getBio())->toBe('New bio');
+        });
+
+        it('updates profile details with null bio', function () {
+            $user = User::create(
+                id: '123e4567-e89b-12d3-a456-426614174000',
+                firstName: 'John',
+                lastName: 'Doe',
+                email: 'john@example.com',
+                password: HashedPassword::fromPlainText('password123'),
+                username: 'johndoe',
+                bio: 'Original bio',
+            );
+
+            $user->updateProfileDetails(
+                firstName: 'John',
+                lastName: 'Doe',
+                username: 'johndoe',
+                bio: null,
+            );
+
+            expect($user->getBio())->toBeNull();
+        });
+
+        it('preserves other fields when updating profile details', function () {
+            $user = User::create(
+                id: '123e4567-e89b-12d3-a456-426614174000',
+                firstName: 'John',
+                lastName: 'Doe',
+                email: 'john@example.com',
+                password: HashedPassword::fromPlainText('password123'),
+                username: 'johndoe',
+                picture: 'https://example.com/avatar.jpg',
+            );
+
+            $user->updateProfileDetails(
+                firstName: 'Jane',
+                lastName: 'Smith',
+                username: 'janesmith',
+                bio: 'New bio',
+            );
+
+            expect($user->getId())->toBe('123e4567-e89b-12d3-a456-426614174000')
+                ->and($user->getEmail()->getValue())->toBe('john@example.com')
+                ->and($user->getPassword()->verify('password123'))->toBeTrue()
+                ->and($user->getPicture())->toBe('https://example.com/avatar.jpg')
+                ->and($user->getCreatedAt())->not->toBeNull();
+        });
+
+        it('validates username format through value object', function () {
+            $user = User::create(
+                id: '123e4567-e89b-12d3-a456-426614174000',
+                firstName: 'John',
+                lastName: 'Doe',
+                email: 'john@example.com',
+                password: HashedPassword::fromPlainText('password123'),
+                username: 'johndoe',
+            );
+
+            expect(fn () => $user->updateProfileDetails(
+                firstName: 'John',
+                lastName: 'Doe',
+                username: 'invalid-username!',
+                bio: null,
+            ))->toThrow(\Modules\Domain\ValueObjects\Exceptions\InvalidUsernameFormatException::class);
+        });
+
+        it('validates first name length through value object', function () {
+            $user = User::create(
+                id: '123e4567-e89b-12d3-a456-426614174000',
+                firstName: 'John',
+                lastName: 'Doe',
+                email: 'john@example.com',
+                password: HashedPassword::fromPlainText('password123'),
+                username: 'johndoe',
+            );
+
+            expect(fn () => $user->updateProfileDetails(
+                firstName: '',
+                lastName: 'Doe',
+                username: 'johndoe',
+                bio: null,
+            ))->toThrow(\Modules\Domain\ValueObjects\Exceptions\InvalidFullNameLengthException::class);
+        });
+
+        it('validates last name length through value object', function () {
+            $user = User::create(
+                id: '123e4567-e89b-12d3-a456-426614174000',
+                firstName: 'John',
+                lastName: 'Doe',
+                email: 'john@example.com',
+                password: HashedPassword::fromPlainText('password123'),
+                username: 'johndoe',
+            );
+
+            expect(fn () => $user->updateProfileDetails(
+                firstName: 'John',
+                lastName: '',
+                username: 'johndoe',
+                bio: null,
+            ))->toThrow(\Modules\Domain\ValueObjects\Exceptions\InvalidFullNameLengthException::class);
+        });
+    });
 });
