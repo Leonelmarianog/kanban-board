@@ -154,5 +154,24 @@ describe('POST /api/auth/login', function () {
                     'message' => 'Invalid credentials.',
                 ]);
         });
+
+        it('returns 403 for unverified email', function () {
+            UserModel::factory()->unverified()->create([
+                'email' => 'unverified@example.com',
+                'username' => 'unverifieduser',
+                'password' => bcrypt('password123'),
+            ]);
+
+            $response = $this->postJson('/api/auth/login', [
+                'email_or_username' => 'unverified@example.com',
+                'password' => 'password123',
+            ]);
+
+            $response->assertStatus(403)
+                ->assertJsonFragment([
+                    'status' => 403,
+                    'message' => 'Please verify your email address before logging in.',
+                ]);
+        });
     });
 });
