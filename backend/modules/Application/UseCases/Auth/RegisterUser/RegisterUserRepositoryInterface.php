@@ -12,5 +12,5 @@ interface RegisterUserRepositoryInterface
 
     public function save(User $user): User;
 
-    public function createToken(User $user, string $tokenName): ?string;
+    public function createVerificationToken(User $user): string;
 }
