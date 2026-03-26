@@ -29,6 +29,7 @@ class UserModel extends Authenticatable
         'username',
         'picture',
         'bio',
+        'email_verified_at',
     ];
 
     /** @var list<string> */

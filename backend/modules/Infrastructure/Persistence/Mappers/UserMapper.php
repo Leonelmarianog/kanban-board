@@ -20,6 +20,9 @@ final class UserMapper
             username: $model->username,
             picture: $model->picture,
             bio: $model->bio,
+            emailVerifiedAt: $model->email_verified_at
+                ? new DateTimeImmutable($model->email_verified_at->toIso8601String())
+                : null,
             createdAt: new DateTimeImmutable($model->created_at->toIso8601String()),
             updatedAt: new DateTimeImmutable($model->updated_at->toIso8601String()),
             deletedAt: $model->deleted_at ? new DateTimeImmutable($model->deleted_at->toIso8601String()) : null,
