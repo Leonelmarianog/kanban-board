@@ -3,6 +3,7 @@
 namespace Modules\Infrastructure\Http\Controllers\Auth;
 
 use Illuminate\Http\JsonResponse;
+use Modules\Application\UseCases\Auth\LoginUser\Exceptions\EmailNotVerifiedException;
 use Modules\Application\UseCases\Auth\LoginUser\Exceptions\InvalidCredentialsException;
 use Modules\Application\UseCases\Auth\LoginUser\Exceptions\LoginUserException;
 use Modules\Application\UseCases\Auth\LoginUser\LoginUserHandler;
@@ -86,6 +87,16 @@ final class LoginUserController extends BaseController
                 )
             ),
             new OA\Response(
+                response: 403,
+                description: 'Email not verified',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'integer', example: 403),
+                        new OA\Property(property: 'message', type: 'string', example: 'Please verify your email address before logging in.'),
+                    ]
+                )
+            ),
+            new OA\Response(
                 response: 500,
                 description: 'Internal server error',
                 content: new OA\JsonContent(
@@ -120,6 +131,11 @@ final class LoginUserController extends BaseController
         } catch (InvalidCredentialsException $e) {
             return $this->error(
                 statusCode: 401,
+                message: $e->getMessage(),
+            );
+        } catch (EmailNotVerifiedException $e) {
+            return $this->error(
+                statusCode: 403,
                 message: $e->getMessage(),
             );
         } catch (LoginUserException $e) {

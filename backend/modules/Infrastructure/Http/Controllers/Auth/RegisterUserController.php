@@ -49,16 +49,7 @@ final class RegisterUserController extends BaseController
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'status', type: 'integer', example: 201),
-                        new OA\Property(property: 'message', type: 'string', example: 'Registration successful.'),
-                        new OA\Property(
-                            property: 'data',
-                            type: 'array',
-                            items: new OA\Items(
-                                properties: [
-                                    new OA\Property(property: 'token', type: 'string', example: '1|abcdef123456...'),
-                                ]
-                            )
-                        ),
+                        new OA\Property(property: 'message', type: 'string', example: 'Registration successful. Please check your email to verify your account.'),
                     ]
                 )
             ),
@@ -116,9 +107,8 @@ final class RegisterUserController extends BaseController
             $response = $this->handler->execute($requestDto);
 
             return $this->success(
-                message: 'Registration successful.',
+                message: $response->message,
                 statusCode: 201,
-                data: ['token' => $response->token],
             );
         } catch (ValidationDomainException $e) {
             return $this->error(
