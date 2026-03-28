@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
+use Modules\Infrastructure\Mail\Mailables\VerificationMailable;
 use Modules\Infrastructure\Persistence\Models\UserModel;
 
 uses(RefreshDatabase::class);
@@ -23,18 +25,11 @@ describe('POST /api/auth/register', function () {
                 ->assertJsonStructure([
                     'status',
                     'message',
-                    'data' => [
-                        [
-                            'token',
-                        ],
-                    ],
                 ])
                 ->assertJsonFragment([
                     'status' => 201,
-                    'message' => 'Registration successful.',
+                    'message' => 'Registration successful. Please check your email to verify your account.',
                 ]);
-
-            expect($response->json('data.0.token'))->toBeString();
 
             $this->assertDatabaseHas('users', [
                 'email' => 'john@example.com',
@@ -42,6 +37,28 @@ describe('POST /api/auth/register', function () {
                 'first_name' => 'John',
                 'last_name' => 'Doe',
             ]);
+        });
+
+        it('sends verification email on registration', function () {
+            Mail::fake();
+
+            $userData = [
+                'first_name' => 'Jane',
+                'last_name' => 'Smith',
+                'email' => 'jane@example.com',
+                'password' => 'password123',
+                'password_confirmation' => 'password123',
+                'username' => 'janesmith',
+            ];
+
+            $response = $this->postJson('/api/auth/register', $userData);
+
+            $response->assertStatus(201);
+
+            Mail::assertQueued(VerificationMailable::class, function ($mail) use ($userData) {
+                return $mail->user->getEmail()->getValue() === $userData['email']
+                    && $mail->user->getFirstName()->getValue() === $userData['first_name'];
+            });
         });
     });
 

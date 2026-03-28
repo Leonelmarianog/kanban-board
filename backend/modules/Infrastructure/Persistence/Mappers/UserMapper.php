@@ -20,24 +20,12 @@ final class UserMapper
             username: $model->username,
             picture: $model->picture,
             bio: $model->bio,
+            emailVerifiedAt: $model->email_verified_at
+                ? new DateTimeImmutable($model->email_verified_at->toIso8601String())
+                : null,
             createdAt: new DateTimeImmutable($model->created_at->toIso8601String()),
             updatedAt: new DateTimeImmutable($model->updated_at->toIso8601String()),
             deletedAt: $model->deleted_at ? new DateTimeImmutable($model->deleted_at->toIso8601String()) : null,
         );
-    }
-
-    public static function toModel(User $user): UserModel
-    {
-        $model = new UserModel;
-        $model->id = $user->getId();
-        $model->first_name = $user->getFirstName()->getValue();
-        $model->last_name = $user->getLastName()->getValue();
-        $model->email = $user->getEmail()->getValue();
-        $model->password = $user->getPassword()->getHashedValue();
-        $model->username = $user->getUsername()->getValue();
-        $model->picture = $user->getPicture();
-        $model->bio = $user->getBio();
-
-        return $model;
     }
 }

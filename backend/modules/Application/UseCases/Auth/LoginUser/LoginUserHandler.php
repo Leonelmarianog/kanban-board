@@ -2,6 +2,7 @@
 
 namespace Modules\Application\UseCases\Auth\LoginUser;
 
+use Modules\Application\UseCases\Auth\LoginUser\Exceptions\EmailNotVerifiedException;
 use Modules\Application\UseCases\Auth\LoginUser\Exceptions\InvalidCredentialsException;
 use Modules\Application\UseCases\Auth\LoginUser\Exceptions\LoginUserException;
 
@@ -23,10 +24,14 @@ final readonly class LoginUserHandler
             throw new InvalidCredentialsException;
         }
 
+        if (! $user->isEmailVerified()) {
+            throw new EmailNotVerifiedException;
+        }
+
         $token = $this->repository->createToken($user, 'auth-token');
 
         if ($token === null) {
-            throw new LoginUserException("Failed to generate token for user '{$user->getId()}' after successful login.", 500);
+            throw new LoginUserException("Failed to generate token for user '{$user->getId()}' after successful login.");
         }
 
         return new LoginUserResponseDto(

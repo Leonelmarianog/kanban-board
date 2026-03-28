@@ -19,6 +19,7 @@ final class User
         private Username $username,
         private ?string $picture,
         private ?string $bio,
+        private ?DateTimeImmutable $emailVerifiedAt,
         private readonly DateTimeImmutable $createdAt,
         private DateTimeImmutable $updatedAt,
         private ?DateTimeImmutable $deletedAt,
@@ -33,6 +34,7 @@ final class User
         string $username,
         ?string $picture = null,
         ?string $bio = null,
+        ?DateTimeImmutable $emailVerifiedAt = null,
         ?DateTimeImmutable $createdAt = null,
         ?DateTimeImmutable $updatedAt = null,
         ?DateTimeImmutable $deletedAt = null,
@@ -48,6 +50,7 @@ final class User
             username: new Username($username),
             picture: $picture,
             bio: $bio,
+            emailVerifiedAt: $emailVerifiedAt,
             createdAt: $createdAt ?? $now,
             updatedAt: $updatedAt ?? $now,
             deletedAt: $deletedAt,
@@ -107,6 +110,21 @@ final class User
     public function getDeletedAt(): ?DateTimeImmutable
     {
         return $this->deletedAt;
+    }
+
+    public function getEmailVerifiedAt(): ?DateTimeImmutable
+    {
+        return $this->emailVerifiedAt;
+    }
+
+    public function isEmailVerified(): bool
+    {
+        return $this->emailVerifiedAt !== null;
+    }
+
+    public function markEmailAsVerified(): void
+    {
+        $this->emailVerifiedAt = new DateTimeImmutable;
     }
 
     public function updateProfileDetails(

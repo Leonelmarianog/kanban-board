@@ -6,8 +6,8 @@ use Modules\Application\Exceptions\ApplicationException;
 
 class LoginUserException extends ApplicationException
 {
-    public function __construct(string $message, int $statusCode = 500)
+    public function __construct(string $message)
     {
-        parent::__construct($message, $statusCode);
+        parent::__construct($message);
     }
 }
