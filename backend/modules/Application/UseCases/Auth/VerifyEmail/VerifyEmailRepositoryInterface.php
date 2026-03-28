@@ -2,19 +2,28 @@
 
 namespace Modules\Application\UseCases\Auth\VerifyEmail;
 
-use Modules\Application\UseCases\Auth\VerifyEmail\Exceptions\InvalidVerificationLinkException;
+use Modules\Domain\Auth\EmailVerificationToken;
 use Modules\Domain\User\User;
 
 interface VerifyEmailRepositoryInterface
 {
     /**
-     * @throws InvalidVerificationLinkException
+     * Find a valid (unused, non-expired) verification token.
      */
-    public function findById(string $id): User;
+    public function findValidToken(string $token): ?EmailVerificationToken;
 
-    public function findValidToken(string $token): ?VerificationTokenDto;
+    /**
+     * Find a user by their ID.
+     */
+    public function findByUserId(string $userId): ?User;
 
+    /**
+     * Mark the token as used by its ID.
+     */
     public function markTokenAsUsed(string $tokenId): void;
 
+    /**
+     * Mark the user's email as verified.
+     */
     public function markEmailAsVerified(User $user): void;
 }

@@ -2,10 +2,10 @@
 
 namespace Modules\Infrastructure\Persistence\Repositories;
 
-use Modules\Application\UseCases\Auth\VerifyEmail\Exceptions\InvalidVerificationLinkException;
-use Modules\Application\UseCases\Auth\VerifyEmail\VerificationTokenDto;
 use Modules\Application\UseCases\Auth\VerifyEmail\VerifyEmailRepositoryInterface;
+use Modules\Domain\Auth\EmailVerificationToken;
 use Modules\Domain\User\User;
+use Modules\Infrastructure\Persistence\Mappers\EmailVerificationTokenMapper;
 use Modules\Infrastructure\Persistence\Mappers\UserMapper;
 use Modules\Infrastructure\Persistence\Models\EmailVerificationTokenModel;
 use Modules\Infrastructure\Persistence\Models\UserModel;
@@ -17,18 +17,7 @@ final readonly class VerifyEmailRepository implements VerifyEmailRepositoryInter
         private EmailVerificationTokenModel $tokenModel,
     ) {}
 
-    public function findById(string $id): User
-    {
-        $model = $this->userModel->find($id);
-
-        if ($model === null) {
-            throw new InvalidVerificationLinkException;
-        }
-
-        return UserMapper::toDomain($model);
-    }
-
-    public function findValidToken(string $token): ?VerificationTokenDto
+    public function findValidToken(string $token): ?EmailVerificationToken
     {
         $model = $this->tokenModel
             ->where('token', $token)
@@ -40,13 +29,18 @@ final readonly class VerifyEmailRepository implements VerifyEmailRepositoryInter
             return null;
         }
 
-        return new VerificationTokenDto(
-            id: $model->id,
-            userId: $model->user_id,
-            token: $model->token,
-            expiresAt: $model->expires_at,
-            usedAt: $model->used_at,
-        );
+        return EmailVerificationTokenMapper::toDomain($model);
+    }
+
+    public function findByUserId(string $userId): ?User
+    {
+        $model = $this->userModel->find($userId);
+
+        if ($model === null) {
+            return null;
+        }
+
+        return UserMapper::toDomain($model);
     }
 
     public function markTokenAsUsed(string $tokenId): void
