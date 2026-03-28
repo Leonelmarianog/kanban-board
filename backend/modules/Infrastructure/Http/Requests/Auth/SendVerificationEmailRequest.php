@@ -3,7 +3,6 @@
 namespace Modules\Infrastructure\Http\Requests\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\ValidationRule;
 
 class SendVerificationEmailRequest extends FormRequest
 {
@@ -13,7 +12,7 @@ class SendVerificationEmailRequest extends FormRequest
     }
 
     /**
-     * @return array<string, ValidationRule|array<mixed>|string>
+     * @return array<string, array<int, string>>
      */
     public function rules(): array
     {
