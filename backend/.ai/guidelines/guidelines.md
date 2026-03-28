@@ -9,7 +9,7 @@ These guidelines document the architecture, patterns, and conventions specific t
 This backend follows a **Modular Monolith (Clean Architecture / Hexagonal Architecture)** pattern:
 
 - **Domain Layer**: Pure PHP entities with no framework dependencies, interfaces (Ports), domain exceptions
-- **Application Layer**: Use cases (Handlers), DTOs, Commands, Queries (CQRS pattern)
+- **Application Layer**: Use cases (Handlers with Request/Response DTOs)
 - **Infrastructure Layer**: Framework-specific implementations (Eloquent models, controllers, adapters)
 
 ```
@@ -628,6 +628,7 @@ describe('POST /api/auth/register', function () {
 | Aspect | Pattern |
 |--------|---------|
 | **Architecture** | Modular Monolith with Clean/Hexagonal Architecture |
+| **Use Cases** | Handler + RequestDto + ResponseDto per use case |
 | **Controllers** | Invokable (single-action), organized by feature |
 | **Routes** | `Route::post('path', ControllerClass::class)` |
 | **Dependency Injection** | ServiceProvider bindings, constructor injection |
