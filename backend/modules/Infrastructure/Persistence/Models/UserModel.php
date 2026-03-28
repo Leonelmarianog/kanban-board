@@ -2,6 +2,7 @@
 
 namespace Modules\Infrastructure\Persistence\Models;
 
+use Carbon\Carbon;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,6 +13,19 @@ use Laravel\Sanctum\HasApiTokens;
 
 /**
  * @use HasFactory<UserFactory>
+ *
+ * @property string $id
+ * @property string $first_name
+ * @property string $last_name
+ * @property string $email
+ * @property string $password
+ * @property string|null $username
+ * @property string|null $picture
+ * @property string|null $bio
+ * @property Carbon|null $email_verified_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
  */
 class UserModel extends Authenticatable
 {
