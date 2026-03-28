@@ -1,5 +1,5 @@
 <?php
 
 return [
-    'token_expiration_seconds' => env('VERIFICATION_TOKEN_EXPIRATION', 900),
+    'token_expiration_seconds' => (int) env('VERIFICATION_TOKEN_EXPIRATION', 900),
 ];
