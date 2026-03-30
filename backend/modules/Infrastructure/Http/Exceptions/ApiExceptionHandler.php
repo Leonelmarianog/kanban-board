@@ -97,6 +97,8 @@ final class ApiExceptionHandler
         Throwable $exception,
         Request $request
     ): JsonResponse {
+        logger()->error($exception);
+
         return $this->error(
             statusCode: 500,
             message: 'An unexpected error occurred.'
