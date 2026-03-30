@@ -1,0 +1,97 @@
+<?php
+
+namespace Modules\Infrastructure\Http\Controllers\Auth;
+
+use Illuminate\Http\JsonResponse;
+use Modules\Application\UseCases\Auth\CancelEmailChange\CancelEmailChangeHandler;
+use Modules\Application\UseCases\Auth\CancelEmailChange\CancelEmailChangeRequestDto;
+use Modules\Application\UseCases\Auth\CancelEmailChange\Exceptions\InvalidEmailChangeTokenException;
+use Modules\Infrastructure\Http\Controllers\BaseController;
+use Modules\Infrastructure\Http\Requests\Auth\CancelEmailChangeRequest;
+use OpenApi\Attributes as OA;
+
+#[OA\Tag(
+    name: 'Email Change',
+    description: 'API endpoints for email change'
+)]
+final class CancelEmailChangeController extends BaseController
+{
+    public function __construct(
+        private readonly CancelEmailChangeHandler $handler,
+    ) {}
+
+    #[OA\Post(
+        path: '/api/auth/email-change/cancel',
+        description: 'Cancel a pending email change request using the token, expires, and signature from the cancellation link',
+        summary: 'Cancel email change',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['token', 'expires', 'signature'],
+                properties: [
+                    new OA\Property(property: 'token', type: 'string', example: 'abc123...'),
+                    new OA\Property(property: 'expires', type: 'integer', example: 1711497600),
+                    new OA\Property(property: 'signature', type: 'string', example: 'def456...'),
+                ]
+            )
+        ),
+        tags: ['Email Change'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Email change cancelled successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'success', type: 'boolean', example: true),
+                        new OA\Property(property: 'status', type: 'integer', example: 200),
+                        new OA\Property(property: 'message', type: 'string', example: 'Email change request cancelled successfully.'),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Invalid or expired cancellation link',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'success', type: 'boolean', example: false),
+                        new OA\Property(property: 'status', type: 'integer', example: 400),
+                        new OA\Property(property: 'message', type: 'string', example: 'Invalid or expired cancellation link.'),
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'Validation error',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'success', type: 'boolean', example: false),
+                        new OA\Property(property: 'status', type: 'integer', example: 422),
+                        new OA\Property(property: 'message', type: 'string', example: 'One or more validation errors occurred.'),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function __invoke(CancelEmailChangeRequest $request): JsonResponse
+    {
+        $dto = new CancelEmailChangeRequestDto(
+            token: $request->validated('token'),
+            expires: (int) $request->validated('expires'),
+            signature: $request->validated('signature'),
+        );
+
+        try {
+            $response = $this->handler->execute($dto);
+
+            return $this->success(
+                message: $response->message,
+                statusCode: 200,
+            );
+        } catch (InvalidEmailChangeTokenException) {
+            return $this->error(
+                statusCode: 400,
+                message: 'Invalid or expired cancellation link.',
+            );
+        }
+    }
+}
