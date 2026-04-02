@@ -2,7 +2,7 @@
 
 ## Development Workflow
 
-> **Note:** The full development workflow is defined in `.ai/guidelines/workflows.md` (AI-managed file).
+> **Note:** The full development workflow is defined in `.ai/workflows/development-workflow.md` (AI-managed file).
 > To update the workflow, ask Claude to update it - it will update all copies.
 
 ### Workflow Summary
