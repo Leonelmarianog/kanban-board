@@ -45,6 +45,8 @@ backend/chore/update-env-example
 | `tests` | Only test files |
 | `docs` | Only documentation |
 
+**Do NOT add Co-Authored-By lines to commits.** Never add model attribution to commit messages.
+
 ### Examples
 
 ```
