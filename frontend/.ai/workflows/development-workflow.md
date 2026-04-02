@@ -1,14 +1,14 @@
-<!--
-================================================================================
-AI-MANAGED FILE - DO NOT EDIT MANUALLY
-================================================================================
+# <!--
+
+# AI-MANAGED FILE - DO NOT EDIT MANUALLY
+
 This file is automatically synchronized across multiple locations.
 To update the workflow, ask Claude to update it - it will update all copies.
 Locations:
-  - backend/.ai/guidelines/workflows.md
-  - frontend/.ai/guidelines/workflows.md
-================================================================================
--->
+
+- backend/.ai/workflows/development-workflow.md
+- # frontend/.ai/workflows/development-workflow.md
+  -->
 
 # Development Workflow
 
@@ -46,15 +46,15 @@ This workflow applies to all development in this monorepo (backend and frontend)
 
 ## Key Decisions
 
-| Aspect | Decision |
-|--------|----------|
-| **PR Size** | 200-400 lines, 1-2 hours per PR |
-| **Tests** | Included with code, not separate commits |
-| **Break-fix** | No break-fix loop (trust well-written tests) |
-| **Commits** | Use pre-approved patterns (no commit-by-commit approval) |
-| **PR Creation** | Propose title/description → user approves → create PR |
-| **CI Failures** | Notify user → user approves fix → push commits |
-| **Merging** | User merges after CI passes |
+| Aspect          | Decision                                                 |
+| --------------- | -------------------------------------------------------- |
+| **PR Size**     | 200-400 lines, 1-2 hours per PR                          |
+| **Tests**       | Included with code, not separate commits                 |
+| **Break-fix**   | No break-fix loop (trust well-written tests)             |
+| **Commits**     | Use pre-approved patterns (no commit-by-commit approval) |
+| **PR Creation** | Propose title/description → user approves → create PR    |
+| **CI Failures** | Notify user → user approves fix → push commits           |
+| **Merging**     | User merges after CI passes                              |
 
 ## Branch Naming
 
@@ -104,6 +104,7 @@ tests(backend): add edge case for {FeatureName}  # Only if missed test cases
 ## CI/CD Checklist
 
 When adding new environment variables or configuration:
+
 - [ ] Update `.env.example`
 - [ ] Update GitHub workflow files (`.github/workflows/*.yml`)
 - [ ] Note in PR description: "⚠️ New env vars: `VAR_NAME`"

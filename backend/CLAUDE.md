@@ -1,672 +1,74 @@
 <laravel-boost-guidelines>
 === .ai/guidelines rules ===
 
-# Project-Specific Guidelines
+# Agent Instructions
 
-These guidelines document the architecture, patterns, and conventions specific to this backend codebase. They complement the framework-level guidelines provided by Laravel Boost.
+You are an expert Laravel developer. Your goal is to write robust, maintainable code using Clean Architecture and modern PHP practices.
 
----
+## Core Directives
 
-## Architecture Overview
+* **Clean Code:** Write code that is easy to read, test, and maintain. Follow SOLID principles. Use descriptive names and keep functions focused on a single responsibility.
+* **Clean Architecture:** Maintain strict separation of concerns. Domain entities have zero framework dependencies. Application layer defines interfaces. Infrastructure implements them.
+* **Laravel Best Practices:** Use Eloquent relationships with return type hints. Prefer `Model::query()` over `DB::`. Use Form Requests for validation. Use `casts()` method, not `$casts` property.
+* **Always Verify:** Before completing a task, review your changes. Check for missing dependencies, potential edge cases, and that tests pass.
+* **Use-Case Specific Repositories:** One operation = one repository. `CreateUserRepository`, not `UserRepository`. Each use case owns its repository interface.
+* **No Magic Strings:** All meaningful string literals (statuses, types, categories) MUST be declared as constants or enums. DO NOT use hardcoded strings like `'active'`, `'pending'`, `'admin'` anywhere.
 
-This backend follows a **Modular Monolith (Clean Architecture / Hexagonal Architecture)** pattern:
+## Strict Constraints (Do NOT Do These)
 
-- **Domain Layer**: Pure PHP entities with no framework dependencies, interfaces (Ports), domain exceptions
-- **Application Layer**: Use cases (Handlers), DTOs, Commands, Queries (CQRS pattern)
-- **Infrastructure Layer**: Framework-specific implementations (Eloquent models, controllers, adapters)
+| Constraint | Reason |
+|------------|--------|
+| **No Generic/Fat Repositories** | Every database operation gets its own dedicated repository. No `UserRepository` with CRUD methods. |
+| **No Dependencies in Domain** | Domain entities are pure PHP. No framework, no external libraries. Only business logic. |
+| **No Framework Bleed** | No Laravel decorators, facades, or ORM annotations in Domain entities. |
+| **No Repositories in Domain Layer** | Repositories belong in Infrastructure. Their interfaces in Application layer. |
+| **No Env Var Fallbacks** | NEVER use `env('X') ?? 'default'` or `config('x') ?? 'default'`. Let required values fail loudly. |
+| **No Cross-Handler Calls** | Use cases must NOT call other use cases. Extract shared logic to domain entities or services. |
+| **No Comments** | Prefer self-explanatory code. Every comment represents a failure to make code clear. Use comments only as a last resort. |
 
-```
-modules/
-├── Auth/                          # Auth module
+## Code Style Quick Reference
 
-│   ├── Application/               # Application layer (CQRS)
+| Category | Rule |
+|----------|------|
+| Controllers | Invokable, `final class`, return `JsonResponse` |
+| Models | UUID primary keys, soft deletes, `casts()` method |
+| Handlers | `final readonly class`, single responsibility |
+| DTOs | `final readonly class`, public properties only |
+| Domain Entities | `final class`, private constructor, factory methods, getters |
+| Value Objects | `final readonly class`, static factory, validation in factory |
 
-│   │   ├── Commands/             # Command objects (write operations)
+## Development Workflow
 
-│   │   ├── DTOs/                 # Data Transfer Objects
+* **PR Size:** 200-400 lines, 1-2 hours per PR
+* **Tests:** Included with code, not separate commits
+* **Branch Naming:** `<layer>/<type>/<description>` (e.g., `backend/feat/change-password-handler`)
+* **Commit Messages:** `<type>(<scope>): <description>` (e.g., `feat(backend): add ChangePasswordHandler`)
 
-│   │   ├── Handlers/             # Command/Query handlers
+## Documentation & Deep Context
 
-│   │   └── Queries/              # Query objects (read operations)
+Deep context files are lazy-loaded when needed:
 
-│   ├── Domain/                    # Domain layer (pure PHP)
+### Architecture (`docs/`)
 
-│   │   ├── Entities/             # Domain entities
+- `docs/use-case-architecture.md` — Full architecture guide with examples
+- `docs/code-style.md` — Detailed code style with examples
 
-│   │   ├── Exceptions/           # Domain-specific exceptions
+**When to read:** Implementing a new use case, making structural changes, or unsure about implementation patterns.
+**When to skip:** Minor bug fixes, typos, or localized refactoring within a single file.
 
-│   │   └── Ports/                # Interfaces/Contracts
+### Workflow (`.ai/workflows/`)
 
-│   ├── Infrastructure/            # Infrastructure layer (Laravel)
+- `.ai/workflows/development-workflow.md` — Full development workflow (feature breakdown, test planning, PR process)
 
-│   │   ├── Adapters/              # Port implementations
+**When to read:** Starting a new feature, creating PRs, or unsure about commit/branch conventions.
+**When to skip:** Minor changes that follow established patterns.
 
-│   │   ├── Http/
-│   │   │   ├── Controllers/       # HTTP controllers
+### Plans (`.ai/plans/`)
 
-│   │   │   ├── Requests/          # Form requests
+- `.ai/plans/module-organization-plan.md` — High-level module organization
 
-│   │   │   └── Resources/         # API resources
-
-│   │   ├── Mappers/              # Eloquent → Domain mappers
-
-│   │   ├── Models/                # Eloquent models
-
-│   │   └── Providers/             # Service providers
-
-│   └── config.php                 # Module-specific config
-
-└── Core/                          # Shared/core module
-
-    ├── Application/Exceptions/    # ApplicationException base
-
-    ├── Domain/Exceptions/          # BaseException, DomainException
-
-    └── Infrastructure/
-        ├── Exceptions/             # InfrastructureException
-
-        └── Http/
-            ├── Controllers/BaseController.php
-            ├── Errors/ApiExceptionHandler.php
-            └── Traits/ApiResponses.php
-```
-
----
-
-## Controllers
-
-### Structure
-
-- Controllers extend `BaseController` from `Core/Infrastructure/Http/Controllers/`
-- Use `ApiResponses` trait for standardized responses
-- Place in `modules/{Module}/Infrastructure/Http/Controllers/`
-
-### Conventions
-
-```php
-final readonly class AuthController extends BaseController
-{
-    public function __construct(
-        private readonly RegisterUserHandler $registerUserHandler,
-        private readonly LoginUserHandler $loginUserHandler,
-    ) {}
-
-    public function register(RegisterRequest $request): JsonResponse
-    {
-        $command = new RegisterUserCommand(...);
-        $authenticatedUser = $this->registerUserHandler->handle($command);
-
-        return $this->success(
-            message: 'Registration successful',
-            statusCode: 201,
-            data: ['token' => $authenticatedUser->token]
-        );
-    }
-}
-```
-
-- Use `final readonly class` for controllers
-- Constructor property promotion with `private readonly` for dependencies
-- Controllers delegate to **Handler classes** (CQRS) - no business logic in controllers
-- Methods return `JsonResponse` with explicit return types
-- Use `$this->success()` and `$this->error()` from `ApiResponses` trait
-
----
-
-## Models (Eloquent)
-
-### Structure
-
-- Models are in `modules/{Module}/Infrastructure/Models/`
-- They are **infrastructure persistence models**, not domain entities
-- Domain entities are in `modules/{Module}/Domain/Entities/`
-
-### Conventions
-
-```php
-/**
- * @use HasFactory<UserFactory>
- */
-class User extends Authenticatable
-{
-    use HasApiTokens, HasFactory, HasUuids, Notifiable, SoftDeletes;
-
-    /** @var list<string> */
-    protected $fillable = [
-        'id',
-        'first_name',
-        'last_name',
-        'email',
-        'password',
-    ];
-
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
-
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
-    }
-
-    protected static function newFactory(): UserFactory
-    {
-        return UserFactory::new();
-    }
-
-    public function member(): HasOne
-    {
-        return $this->hasOne(MemberModel::class);
-    }
-}
-```
-
-- UUID primary keys (use `HasUuids` trait)
-- Soft deletes (use `SoftDeletes` trait)
-- Use `casts()` method, not `$casts` property (Laravel 11/12 convention)
-- Add `@var list<string>` PHPDoc for `$fillable`
-- Add `@use HasFactory<FactoryClass>` PHPDoc annotation
-- Implement `newFactory()` for factory resolution
-- Relationships use Eloquent return type hints (`HasOne`, `HasMany`, etc.)
-
----
-
-## Repositories (Port-Adapter Pattern)
-
-### Port (Interface) - Domain Layer
-
-```php
-// modules/{Module}/Domain/Ports/UserRepositoryInterface.php
-interface UserRepositoryInterface
-{
-    public function findByIdOrFail(string $id): User;
-    public function findByEmailOrFail(string $email): User;
-    public function store(User $user): User;
-    public function update(User $user): User;
-}
-```
-
-### Adapter (Implementation) - Infrastructure Layer
-
-```php
-// modules/{Module}/Infrastructure/Adapters/EloquentUserRepository.php
-final class EloquentUserRepository implements UserRepositoryInterface
-{
-    public function findByIdOrFail(string $id): User
-    {
-        $userModel = UserModel::findOrFail($id);
-        return UserMapper::toDomain($userModel);
-    }
-}
-```
-
-### Conventions
-
-- **Ports** return Domain entities, not Eloquent models
-- **Adapters** use Mappers to convert Eloquent models to Domain entities
-- Use `final class` for implementations
-- Bind ports to adapters in ServiceProviders
-
----
-
-## Mappers
-
-Mappers convert Eloquent models to Domain entities:
-
-```php
-// modules/{Module}/Infrastructure/Mappers/UserMapper.php
-final class UserMapper
-{
-    public static function toDomain(UserModel $model): User
-    {
-        return new User(
-            id: $model->id,
-            firstName: $model->first_name,
-            lastName: $model->last_name,
-            email: $model->email,
-        );
-    }
-
-    public static function toModel(User $user): UserModel
-    {
-        $model = new UserModel;
-        $model->id = $user->id;
-        $model->first_name = $user->firstName;
-        // ...
-        return $model;
-    }
-}
-```
-
-- Use `final class` with static methods
-- `toDomain()` converts Model → Entity
-- `toModel()` converts Entity → Model (when needed)
-
----
-
-## Form Requests
-
-### Structure
-
-- Place in `modules/{Module}/Infrastructure/Http/Requests/`
-
-### Conventions
-
-```php
-class RegisterRequest extends FormRequest
-{
-    public function authorize(): bool
-    {
-        return true;
-    }
-
-    /**
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
-    public function rules(): array
-    {
-        return [
-            'first_name' => ['required', 'string', 'max:255'],
-            'last_name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'confirmed', Password::defaults()],
-        ];
-    }
-}
-```
-
-- Use array-based validation rules (not pipe `|` syntax)
-- `authorize()` returns `true` by default
-- Add PHPDoc return type hint for rules
-
----
-
-## CQRS (Commands, Queries, Handlers)
-
-### Commands (Write Operations)
-
-```php
-// modules/{Module}/Application/Commands/RegisterUserCommand.php
-final readonly class RegisterUserCommand
-{
-    public function __construct(
-        public string $firstName,
-        public string $lastName,
-        public string $email,
-        public string $password,
-    ) {}
-}
-```
-
-### Queries (Read Operations)
-
-```php
-// modules/{Module}/Application/Queries/GetCurrentMemberQuery.php
-final readonly class GetCurrentMemberQuery
-{
-    public function __construct(
-        public string $userId,
-    ) {}
-}
-```
-
-### Handlers
-
-```php
-// modules/{Module}/Application/Handlers/RegisterUserHandler.php
-final readonly class RegisterUserHandler
-{
-    public function __construct(
-        private UserRepositoryInterface $userRepository,
-        private MemberRepositoryInterface $memberRepository,
-        private PasswordHasherInterface $passwordHasher,
-        private TransactionInterface $transaction,
-    ) {}
-
-    public function handle(RegisterUserCommand $command): AuthenticatedUserDTO
-    {
-        return $this->transaction->execute(function () use ($command) {
-            // Business logic
-        });
-    }
-}
-```
-
-### Conventions
-
-- Use `final readonly class` for Commands, Queries, and Handlers
-- Commands/Queries contain only public properties (no methods)
-- Handlers receive Commands/Queries and return DTOs or Entities
-- Wrap write operations in transactions via `TransactionInterface`
-
----
-
-## DTOs (Data Transfer Objects)
-
-```php
-// modules/{Module}/Application/DTOs/MemberDto.php
-final readonly class MemberDto
-{
-    public function __construct(
-        public string $id,
-        public string $fullName,
-        public string $email,
-        public ?string $avatarUrl,
-        public ?string $bio,
-    ) {}
-}
-```
-
-- Use `final readonly class`
-- Only public properties, no methods
-- Used for data transfer between layers
-
----
-
-## API Resources
-
-### Structure
-
-- Place in `modules/{Module}/Infrastructure/Http/Resources/`
-
-### Conventions
-
-```php
-/**
- * @property-read MemberDto $resource
- */
-class MemberResource extends JsonResource
-{
-    public function toArray(Request $request): array
-    {
-        return [
-            'id' => $this->resource->id,
-            'full_name' => $this->resource->fullName,
-            'email' => $this->resource->email,
-            'avatar_url' => $this->resource->avatarUrl,
-            'bio' => $this->resource->bio,
-        ];
-    }
-}
-```
-
-- Transform DTOs to JSON responses
-- Add `@property-read` PHPDoc for type hints
-- Use snake_case for JSON keys
-
----
-
-## API Response Format
-
-All API responses use a standardized format via `ApiResponses` trait:
-
-### Success Response
-
-```json
-{
-    "success": true,
-    "status": 200,
-    "message": "Operation successful.",
-    "data": { ... }
-}
-```
-
-### Error Response
-
-```json
-{
-    "success": false,
-    "status": 400,
-    "message": "Error message",
-    "error": {
-        "type": "ExceptionType",
-        "message": "Detailed error",
-        "code": 500,
-        "timestamp": "2026-03-16T...",
-        "validation_errors": { ... }
-    },
-    "debug": { ... }
-}
-```
-
-- `debug` only included when `APP_DEBUG=true`
-- `validation_errors` only for `ValidationException`
-
----
-
-## Routes
-
-### Structure
-
-- `routes/api.php` - Base auth routes (`/api/auth/*`)
-- `routes/api_v1.php` - Versioned API routes (`/api/v1/*`)
-
-### Conventions
-
-```php
-// routes/api.php
-Route::prefix('auth')->group(function () {
-    Route::post('register', [AuthController::class, 'register']);
-    Route::post('login', [AuthController::class, 'login']);
-
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::post('logout', [AuthController::class, 'logout']);
-    });
-});
-
-// routes/api_v1.php
-Route::prefix('v1')->group(function () {
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::get('/members/me', [MemberController::class, 'me']);
-    });
-});
-```
-
-- Use route groups with prefixes
-- Apply middleware inline with `middleware('auth:sanctum')`
-- Use array syntax for controllers: `[Controller::class, 'method']`
-
----
-
-## Exception Hierarchy
-
-```
-BaseException (abstract)
-├── DomainException (abstract)
-│   ├── UserNotFoundException
-│   ├── UserAlreadyExistsException
-│   └── AuthenticationFailedException
-├── ApplicationException (abstract)
-│   └── MemberNotFoundException
-└── InfrastructureException (abstract)
-```
-
-### Convention
-
-```php
-final class AuthenticationFailedException extends DomainException
-{
-    public function __construct(
-        string $message = 'Authentication failed.',
-        int $statusCode = 401
-    ) {
-        parent::__construct($message, $statusCode);
-    }
-}
-```
-
-- Domain exceptions extend `DomainException`
-- Use `final class`
-- Default message and status code in constructor
-
----
-
-## Service Providers
-
-Modules register their bindings in their own ServiceProvider:
-
-```php
-// modules/{Module}/Infrastructure/Providers/AuthServiceProvider.php
-class AuthServiceProvider extends ServiceProvider
-{
-    public function register(): void
-    {
-        // Port → Adapter bindings
-        $this->app->bind(UserRepositoryInterface::class, EloquentUserRepository::class);
-        $this->app->bind(MemberRepositoryInterface::class, EloquentMemberRepository::class);
-
-        // Handler bindings with constructor injection
-        $this->app->bind(RegisterUserHandler::class, function ($app) {
-            return new RegisterUserHandler(
-                $app->make(UserRepositoryInterface::class),
-                $app->make(MemberRepositoryInterface::class),
-                // ...other dependencies
-            );
-        });
-    }
-
-    public function boot(): void
-    {
-        $this->mergeConfigFrom(__DIR__.'/../../config.php', 'auth');
-    }
-}
-```
-
-- Register in `bootstrap/providers.php`
-
----
-
-## Database
-
-### Migrations
-
-```php
-Schema::create('members', function (Blueprint $table) {
-    $table->uuid('id')->primary();
-    $table->foreignUuid('user_id')->constrained('users')->cascadeOnDelete();
-    $table->string('email')->unique();
-    $table->timestamps();
-    $table->softDeletes();
-});
-```
-
-- UUID primary keys (`$table->uuid('id')->primary()`)
-- Foreign keys with `constrained()` and `cascadeOnDelete()`
-- Soft deletes on all tables
-- Unique constraints where appropriate
-
-### Factories
-
-```php
-class UserFactory extends Factory
-{
-    protected $model = UserModel::class;
-    protected static ?string $password;
-
-    public function definition(): array
-    {
-        return [
-            'first_name' => fake()->firstName(),
-            'last_name' => fake()->lastName(),
-            'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
-        ];
-    }
-
-    public function unverified(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
-        ]);
-    }
-}
-```
-
-- Use static password caching for performance
-- Provide state methods for common variants
-
----
-
-## Testing (Pest)
-
-### Structure
-
-Tests mirror module structure:
-
-```
-tests/
-├── Feature/Auth/Infrastructure/
-│   ├── Adapters/
-│   └── Http/
-└── Unit/Auth/
-    ├── Application/DTOs/
-    ├── Domain/Entities/
-    └── Infrastructure/
-        ├── Adapters/
-        └── Mappers/
-```
-
-### Conventions
-
-```php
-uses(RefreshDatabase::class);
-
-describe('POST /api/auth/register', function () {
-    describe('Happy path', function () {
-        it('registers a new user', function () {
-            $response = $this->postJson('/api/auth/register', $userData);
-
-            $response->assertStatus(201)
-                ->assertJsonStructure(['success', 'status', 'message', 'data'])
-                ->assertJsonFragment(['success' => true]);
-        });
-    });
-
-    describe('HTTP request validation', function () {
-        it('validates required fields', function () {
-            // ...
-        });
-    });
-
-    describe('Business rules', function () {
-        it('prevents duplicate email registration', function () {
-            // ...
-        });
-    });
-});
-```
-
-- Use `describe()` blocks for grouping
-- Organize by: `Happy path`, `HTTP request validation`, `Business rules`
-- Use `RefreshDatabase` trait for database tests
-- Use factories for test data: `UserModel::factory()->create()`
-- Assert JSON structure and fragments
-
----
-
-## Summary Table
-
-| Aspect | Pattern |
-|--------|---------|
-| **Architecture** | Modular Monolith with Clean/Hexagonal Architecture |
-| **CQRS** | Commands (write) / Queries (read) with Handlers |
-| **Dependency Injection** | ServiceProvider bindings, constructor injection |
-| **Domain Entities** | Pure PHP classes, no framework dependencies |
-| **Repositories** | Port (Interface) in Domain, Adapter in Infrastructure |
-| **Mappers** | Static methods convert Eloquent ↔ Domain entities |
-| **DTOs** | `final readonly class` for data transfer |
-| **API Resources** | Transform DTOs to JSON |
-| **Validation** | Form Request classes |
-| **Authentication** | Laravel Sanctum |
-| **Primary Keys** | UUIDs |
-| **Soft Deletes** | Enabled on all models |
-| **Testing** | Pest PHP, Feature/Unit separation |
-| **API Responses** | Standardized JSON via `ApiResponses` trait |
+**When to read:** Adding a new module or planning feature locations.
+**When to skip:** Working within existing modules.
 
 === foundation rules ===
 
@@ -678,11 +80,13 @@ The Laravel Boost guidelines are specifically curated by Laravel maintainers for
 
 This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
 
-- php - 8.5.1
+- php - 8.5
 - laravel/framework (LARAVEL) - v12
 - laravel/prompts (PROMPTS) - v0
 - laravel/sanctum (SANCTUM) - v4
 - larastan/larastan (LARASTAN) - v3
+- laravel/boost (BOOST) - v2
+- laravel/mcp (MCP) - v0
 - laravel/pail (PAIL) - v1
 - laravel/pint (PINT) - v1
 - laravel/sail (SAIL) - v1
@@ -694,8 +98,8 @@ This application is a Laravel application and its main Laravel ecosystems packag
 
 This project has domain-specific skills available. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck.
 
-- `pest-testing` — Tests applications using the Pest 4 PHP framework. Activates when writing tests, creating unit or feature tests, adding assertions, testing Livewire components, browser testing, debugging test failures, working with datasets or mocking; or when the user mentions test, spec, TDD, expects, assertion, coverage, or needs to verify functionality works.
-- `tailwindcss-development` — Styles applications using Tailwind CSS v4 utilities. Activates when adding styles, restyling components, working with gradients, spacing, layout, flex, grid, responsive design, dark mode, colors, typography, or borders; or when the user mentions CSS, styling, classes, Tailwind, restyle, hero section, cards, buttons, or any visual/UI changes.
+- `pest-testing` — Use this skill for Pest PHP testing in Laravel projects only. Trigger whenever any test is being written, edited, fixed, or refactored — including fixing tests that broke after a code change, adding assertions, converting PHPUnit to Pest, adding datasets, and TDD workflows. Always activate when the user asks how to write something in Pest, mentions test files or directories (tests/Feature, tests/Unit, tests/Browser), or needs browser testing, smoke testing multiple pages for JS errors, or architecture tests. Covers: it()/expect() syntax, datasets, mocking, browser testing (visit/click/fill), smoke testing, arch(), Livewire component tests, RefreshDatabase, and all Pest 4 features. Do not use for factories, seeders, migrations, controllers, models, or non-test PHP code.
+- `tailwindcss-development` — Always invoke when the user's message includes 'tailwind' in any form. Also invoke for: building responsive grid layouts (multi-column card grids, product grids), flex/grid page structures (dashboards with sidebars, fixed topbars, mobile-toggle navs), styling UI components (cards, tables, navbars, pricing sections, forms, inputs, badges), adding dark mode variants, fixing spacing or typography, and Tailwind v3/v4 work. The core use case: writing or fixing Tailwind utility classes in HTML templates (Blade, JSX, Vue). Skip for backend PHP logic, database queries, API routes, JavaScript with no HTML/CSS component, CSS file audits, build tool configuration, and vanilla CSS.
 
 ## Conventions
 
@@ -880,7 +284,7 @@ protected function isAccessible(User $user, ?string $path = null): bool
 - Middleware are configured declaratively in `bootstrap/app.php` using `Application::configure()->withMiddleware()`.
 - `bootstrap/app.php` is the file to register middleware, exceptions, and routing files.
 - `bootstrap/providers.php` contains application specific service providers.
-- The `app\Console\Kernel.php` file no longer exists; use `bootstrap/app.php` or `routes/console.php` for console configuration.
+- The `app/Console/Kernel.php` file no longer exists; use `bootstrap/app.php` or `routes/console.php` for console configuration.
 - Console commands in `app/Console/Commands/` are automatically available and do not require manual registration.
 
 ## Database
@@ -906,15 +310,5 @@ protected function isAccessible(User $user, ?string $path = null): bool
 - This project uses Pest for testing. Create tests: `php artisan make:test --pest {name}`.
 - Run tests: `php artisan test --compact` or filter: `php artisan test --compact --filter=testName`.
 - Do NOT delete tests without approval.
-- CRITICAL: ALWAYS use `search-docs` tool for version-specific Pest documentation and updated code examples.
-- IMPORTANT: Activate `pest-testing` every time you're working with a Pest or testing-related task.
-
-=== tailwindcss/core rules ===
-
-# Tailwind CSS
-
-- Always use existing Tailwind conventions; check project patterns before adding new ones.
-- IMPORTANT: Always use `search-docs` tool for version-specific Tailwind CSS documentation and updated code examples. Never rely on training data.
-- IMPORTANT: Activate `tailwindcss-development` every time you're working with a Tailwind CSS or styling-related task.
 
 </laravel-boost-guidelines>
