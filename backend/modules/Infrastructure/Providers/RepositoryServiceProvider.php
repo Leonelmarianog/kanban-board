@@ -7,6 +7,8 @@ use Modules\Application\UseCases\Auth\CancelEmailChange\CancelEmailChangeHandler
 use Modules\Application\UseCases\Auth\CancelEmailChange\CancelEmailChangeRepositoryInterface;
 use Modules\Application\UseCases\Auth\ChangeEmail\ChangeEmailHandler;
 use Modules\Application\UseCases\Auth\ChangeEmail\ChangeEmailRepositoryInterface;
+use Modules\Application\UseCases\Auth\ChangePassword\ChangePasswordHandler;
+use Modules\Application\UseCases\Auth\ChangePassword\ChangePasswordRepositoryInterface;
 use Modules\Application\UseCases\Auth\ConfirmEmailChange\ConfirmEmailChangeHandler;
 use Modules\Application\UseCases\Auth\ConfirmEmailChange\ConfirmEmailChangeRepositoryInterface;
 use Modules\Application\UseCases\Auth\LoginUser\LoginUserHandler;
@@ -25,6 +27,7 @@ use Modules\Application\UseCases\Member\UpdateProfileDetails\UpdateProfileDetail
 use Modules\Application\UseCases\Member\UpdateProfileDetails\UpdateProfileDetailsRepositoryInterface;
 use Modules\Infrastructure\Http\Controllers\Auth\CancelEmailChangeController;
 use Modules\Infrastructure\Http\Controllers\Auth\ChangeEmailController;
+use Modules\Infrastructure\Http\Controllers\Auth\ChangePasswordController;
 use Modules\Infrastructure\Http\Controllers\Auth\ConfirmEmailChangeController;
 use Modules\Infrastructure\Http\Controllers\Auth\SendVerificationEmailController;
 use Modules\Infrastructure\Http\Controllers\Auth\VerifyEmailController;
@@ -33,6 +36,7 @@ use Modules\Infrastructure\Mail\MailerInterface;
 use Modules\Infrastructure\Persistence\EloquentTransaction;
 use Modules\Infrastructure\Persistence\Repositories\CancelEmailChangeRepository;
 use Modules\Infrastructure\Persistence\Repositories\ChangeEmailRepository;
+use Modules\Infrastructure\Persistence\Repositories\ChangePasswordRepository;
 use Modules\Infrastructure\Persistence\Repositories\ConfirmEmailChangeRepository;
 use Modules\Infrastructure\Persistence\Repositories\GetMemberRepository;
 use Modules\Infrastructure\Persistence\Repositories\LoginUserRepository;
@@ -122,6 +126,11 @@ final class RepositoryServiceProvider extends ServiceProvider
             CancelEmailChangeRepository::class
         );
 
+        $this->app->bind(
+            ChangePasswordRepositoryInterface::class,
+            ChangePasswordRepository::class
+        );
+
         // Bind use case handlers
         $this->app->bind(RegisterUserHandler::class, function ($app) {
             return new RegisterUserHandler(
@@ -195,6 +204,14 @@ final class RepositoryServiceProvider extends ServiceProvider
             );
         });
 
+        $this->app->bind(ChangePasswordHandler::class, function ($app) {
+            return new ChangePasswordHandler(
+                $app->make(ChangePasswordRepositoryInterface::class),
+                $app->make(TransactionInterface::class),
+                $app->make(MailerInterface::class),
+            );
+        });
+
         // Bind controllers
         $this->app->bind(SendVerificationEmailController::class, function ($app) {
             return new SendVerificationEmailController(
@@ -223,6 +240,12 @@ final class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(CancelEmailChangeController::class, function ($app) {
             return new CancelEmailChangeController(
                 $app->make(CancelEmailChangeHandler::class),
+            );
+        });
+
+        $this->app->bind(ChangePasswordController::class, function ($app) {
+            return new ChangePasswordController(
+                $app->make(ChangePasswordHandler::class),
             );
         });
     }

@@ -138,4 +138,9 @@ final class User
         $this->username = new Username($username);
         $this->bio = $bio;
     }
+
+    public function changePassword(HashedPassword $newPassword): void
+    {
+        $this->password = $newPassword;
+    }
 }
