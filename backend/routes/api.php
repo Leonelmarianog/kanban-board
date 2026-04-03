@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Infrastructure\Http\Controllers\Auth\CancelEmailChangeController;
 use Modules\Infrastructure\Http\Controllers\Auth\ChangeEmailController;
+use Modules\Infrastructure\Http\Controllers\Auth\ChangePasswordController;
 use Modules\Infrastructure\Http\Controllers\Auth\ConfirmEmailChangeController;
 use Modules\Infrastructure\Http\Controllers\Auth\LoginUserController;
 use Modules\Infrastructure\Http\Controllers\Auth\LogoutUserController;
@@ -41,4 +42,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Throttle: 3 per 15 min per user/IP, 10 per hour per IP
     Route::post('auth/email-change', ChangeEmailController::class)
         ->middleware('throttle:email-change');
+
+    // Throttle: 3 per 15 min per user
+    Route::patch('auth/change-password', ChangePasswordController::class)
+        ->middleware('throttle:password-change');
 });

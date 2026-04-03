@@ -241,6 +241,67 @@ final class UserFactory extends Factory
 | Specific exceptions extend the use-case base | `EmailAlreadyExistsException extends RegisterUserException` |
 | Controllers map exceptions to HTTP status codes | `catch (EmailAlreadyExistsException $e) { return $this->error(statusCode: 409, ...) }` |
 
+## OpenApi Attributes (Swagger)
+
+| Rule | Example |
+|------|---------|
+| Named arguments must match constructor parameter order | `new OA\Property(property: 'email', type: 'string', example: 'a@b.c')` |
+| Multi-line attributes for readability | See example below |
+| One attribute per line in multi-line | `new OA\Property(...)` on separate lines |
+
+### Parameter Order by Attribute
+
+| Attribute | Order |
+|-----------|-------|
+| `OA\Property` | property, type, format, example |
+| `OA\Response` | response, description, content |
+| `OA\RequestBody` | required, content |
+| `OA\JsonContent` | required, properties |
+| `OA\Patch`, `OA\Post`, etc. | path, description, summary, security, requestBody, tags, responses |
+
+```php
+#[OA\Patch(
+    path: '/api/auth/password',
+    description: 'Change the authenticated user\'s password.',
+    summary: 'Change password',
+    security: [['sanctum' => []]],
+    requestBody: new OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            required: ['current_password', 'password'],
+            properties: [
+                new OA\Property(
+                    property: 'current_password',
+                    type: 'string',
+                    example: 'oldpassword123'
+                ),
+                new OA\Property(
+                    property: 'password',
+                    type: 'string',
+                    example: 'newpassword123'
+                ),
+            ]
+        )
+    ),
+    tags: ['Password'],
+    responses: [
+        new OA\Response(
+            response: 200,
+            description: 'Password changed successfully',
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(
+                        property: 'status',
+                        type: 'integer',
+                        example: 200
+                    ),
+                ]
+            )
+        ),
+    ]
+)]
+```
+
 ## PHP Style
 
 | Rule | Example |
@@ -252,3 +313,109 @@ final class UserFactory extends Factory
 | Enums in TitleCase | `FavoritePerson`, `BestLake`, `Monthly` |
 | Prefer PHPDoc blocks over inline comments | Only comment when logic is exceptionally complex |
 | No empty `__construct()` with zero parameters | Unless constructor is private |
+| Use `use` statements, not inline FQCN in PHPDoc | `/** @var UserModel\|null $user */` not `/** @var \Modules\...\UserModel\|null $user */` |
+| Import classes in `use` statements, not FQCN in PHPDoc | `use App\Models\User;` then `@var User` not `@var \App\Models\User` |
+
+## Timestamps
+
+| Rule | Example |
+|------|---------|
+| Let Eloquent handle `updated_at` automatically | Use `$model->fill([...])->save()` not `where()->update(['updated_at' => now()])` |
+| Domain entities do NOT update timestamps | Entity methods only modify domain state, not `updatedAt` |
+| Use `fill()->save()` pattern for updates | `$model->fill(['field' => $value])->save()` |
+| Check `$fillable` before mass assignment | Attributes not in `$fillable` are guarded and cannot be set via `fill()` |
+
+### Why Entity Methods Don't Update Timestamps
+
+Domain entities should not be aware of persistence concerns. The `updated_at` column is a database/persistence detail, not a domain concept.
+
+```php
+// Wrong: Domain entity managing timestamps
+public function changePassword(HashedPassword $newPassword): void
+{
+    $this->password = $newPassword;
+    $this->updatedAt = new DateTimeImmutable;  // Don't do this
+}
+
+// Correct: Entity only manages domain state
+public function changePassword(HashedPassword $newPassword): void
+{
+    $this->password = $newPassword;
+}
+```
+
+```php
+// Correct: Repository handles persistence details
+public function updatePassword(User $user): void
+{
+    $model = $this->model->findOrFail($user->getId());
+    $model->fill(['password' => $user->getPassword()->getHashedValue()]);
+    $model->save();  // Eloquent automatically sets updated_at
+}
+```
+
+## Type Hints for IDE Support
+
+| Rule | Example |
+|------|---------|
+| Use PHPDoc `@var` for inferred types | `/** @var PersonalAccessToken $token */` |
+| Assign to variable before accessing properties | Don't chain calls that return interfaces |
+| Import classes for type hints | `use Laravel\Sanctum\PersonalAccessToken;` then `@var PersonalAccessToken` |
+
+### Sanctum Token Type Hint
+
+When accessing `currentAccessToken()` on an authenticated user, use a variable with PHPDoc:
+
+```php
+// Wrong: IDE can't infer the type, warns about 'id' property
+$tokenId = (string) $user->currentAccessToken()->id;
+
+// Correct: PHPDoc tells IDE the actual type
+/** @var PersonalAccessToken $token */
+$token = $user->currentAccessToken();
+$tokenId = (string) $token->id;
+```
+
+### Why This Matters
+
+- `currentAccessToken()` returns `HasAbilities|null` (an interface)
+- `HasAbilities` doesn't have an `id` property
+- `PersonalAccessToken` implements `HasAbilities` and has the `id` property
+- PHPDoc `@var` tells the IDE the actual runtime type
+
+## Guarded Attributes
+
+| Rule | Example |
+|------|---------|
+| Always check `$fillable` before using `fill()` | Attributes not in `$fillable` are guarded |
+| Use `fill()->save()` instead of `where()->update()` | `fill()` respects `$fillable`, `update()` bypasses it |
+| Never manually set `updated_at` in queries | Eloquent handles timestamps automatically on `save()` |
+
+### Checking Model Fillable
+
+Before using `fill()`, verify the attribute is in the model's `$fillable` array:
+
+```php
+// UserModel $fillable includes: 'password'
+// ✅ Correct: 'password' is fillable
+$model->fill(['password' => $hashedPassword])->save();
+
+// ❌ Wrong: 'updated_at' is NOT fillable (guarded)
+$model->fill(['password' => $hashedPassword, 'updated_at' => now()])->save();
+// This will silently ignore 'updated_at'!
+```
+
+### Why `where()->update()` Causes Issues
+
+```php
+// ❌ Problematic: Bypasses Eloquent's mass assignment protection
+$this->model->where('id', $userId)->update([
+    'password' => $hashedPassword,
+    'updated_at' => now(),  // IDE warns: guarded attribute
+]);
+
+// ✅ Correct: Uses Eloquent properly
+$model = $this->model->findOrFail($userId);
+$model->fill(['password' => $hashedPassword]);
+$model->save();  // Eloquent sets updated_at automatically
+```

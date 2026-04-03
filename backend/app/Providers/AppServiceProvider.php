@@ -44,5 +44,10 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('email-change-cancel', function (Request $request) {
             return Limit::perMinute(10)->by($request->ip());
         });
+
+        // Password change: 3 per 15 min per user
+        RateLimiter::for('password-change', function (Request $request) {
+            return Limit::perMinutes(15, 3)->by($request->user()?->id ?: $request->ip());
+        });
     }
 }
